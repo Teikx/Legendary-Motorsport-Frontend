@@ -1,9 +1,9 @@
-import { Vehicle } from "./types";
+import { CatalogVehicle } from "./types";
 import styles from "./VehicleCard.module.css";
 
 type VehicleCardProps = {
-  vehicle: Vehicle;
-  onOpenDetail: (vehicle: Vehicle) => void;
+  vehicle: CatalogVehicle;
+  onOpenDetail: (vehicle: CatalogVehicle) => void;
 };
 
 export default function VehicleCard({ vehicle, onOpenDetail }: VehicleCardProps) {
@@ -16,14 +16,12 @@ export default function VehicleCard({ vehicle, onOpenDetail }: VehicleCardProps)
       >
         <div className={styles.media}>
           <img
-            src={vehicle.image}
+            src={vehicle.imageUrl}
             alt={`${vehicle.brand} ${vehicle.model}`}
             className={styles.image}
             loading="lazy"
           />
-          <span className={styles.yearBadge}>
-            {vehicle.year}
-          </span>
+          <span className={styles.yearBadge}>Disponible</span>
         </div>
         <div className={styles.body}>
           <div>
@@ -32,16 +30,16 @@ export default function VehicleCard({ vehicle, onOpenDetail }: VehicleCardProps)
           </div>
           <div className={styles.priceRow}>
             <p className={styles.price}>
-              ${vehicle.price.toLocaleString("en-US")}
+              ${vehicle.minPrice.toLocaleString("en-US")}
             </p>
-            <p className={styles.stock}>Stock: {vehicle.stock}</p>
+            <p className={styles.stock}>Stock: {vehicle.stockTotal}</p>
           </div>
           <div className={styles.metaList}>
             <span className={styles.metaPill}>
-              {vehicle.mileage.toLocaleString("en-US")} km
+              Desde {vehicle.minPrice.toLocaleString("en-US")}
             </span>
             <span className={styles.metaPill}>
-              {vehicle.colors.length} colores
+              {vehicle.colorsAvailable} colores
             </span>
           </div>
         </div>

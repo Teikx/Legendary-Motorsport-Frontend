@@ -1,33 +1,59 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./Login.module.css";
 
+type Mode = "login" | "register";
+
 type LoginFormState = {
   Email: string;
   Password: string;
-  remember: boolean;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  idRol: number;
 };
 
 const initialState: LoginFormState = {
   Email: "",
   Password: "",
-  remember: true,
+  nombre: "",
+  apellido: "",
+  telefono: "",
+  idRol: 2,
 };
+
+const API_BASE_URL = "http://localhost:5035";
 
 export default function Login() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("login");
   const [formState, setFormState] = useState<LoginFormState>(initialState);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const canSubmit = useMemo(
-    () => formState.Email.trim().length > 0 && formState.Password.length > 0,
-    [formState.Email, formState.Password],
-  );
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      router.push("/catalog");
+    }
+  }, [router]);
+
+  const canSubmit = useMemo(() => {
+    if (mode === "login") {
+      return formState.Email.trim().length > 0 && formState.Password.length > 0;
+    }
+    return (
+      formState.Email.trim().length > 0 &&
+      formState.Password.length > 0 &&
+      formState.nombre.trim().length > 0 &&
+      formState.apellido.trim().length > 0 &&
+      formState.telefono.trim().length > 0
+    );
+  }, [mode, formState]);
 
   const handleChange = (field: keyof LoginFormState, value: string | boolean) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -50,21 +76,81 @@ export default function Login() {
       return;
     }
 
-    const payload = {
-      Email: formState.Email.trim(),
-      Password: formState.Password,
-    };
+    if (mode === "register") {
+      if (!formState.nombre.trim() || !formState.apellido.trim()) {
+        setError("Completa tu nombre y apellido");
+        return;
+      }
+      if (!formState.telefono.trim()) {
+        setError("Ingresa tu telefono");
+        return;
+      }
+    }
 
     setIsSubmitting(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 900));
+    try {
+      if (mode === "login") {
+        const response = await fetch(`${API_BASE_URL}/api/clientes/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formState.Email.trim(),
+            contrasena: formState.Password,
+          }),
+        });
 
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    setFormState((prev) => ({ ...prev, Password: "" }));
-    router.push("/catalog");
+        const data = await response.json().catch(() => ({}));
 
-    void payload;
+        if (!response.ok) {
+          setError(data?.error ?? "Credenciales invalidas");
+          return;
+        }
+
+        if (data?.token) {
+          localStorage.setItem("authToken", data.token);
+          localStorage.setItem("idCliente", String(data.idCliente ?? ""));
+          localStorage.setItem("email", data.email ?? "");
+          localStorage.setItem("idRol", String(data.idRol ?? ""));
+        }
+
+        setIsSuccess(true);
+        setFormState((prev) => ({ ...prev, Password: "" }));
+        router.push("/catalog");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/clientes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: formState.nombre.trim(),
+          apellido: formState.apellido.trim(),
+          telefono: formState.telefono.trim(),
+          email: formState.Email.trim(),
+          idRol: formState.idRol,
+          contrasena: formState.Password,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setError(data?.error ?? "No se pudo crear la cuenta");
+        return;
+      }
+
+      setIsSuccess(true);
+      setFormState((prev) => ({ ...prev, Password: "" }));
+    } catch (err) {
+      setError("No se pudo conectar con el servidor");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,14 +162,80 @@ export default function Login() {
       <main className={`${styles.card} shadow-2xl`}>
         <header className={styles.header}>
           <p className={styles.kicker}>LegendaryMotorsport</p>
-          <h1 className={styles.title}>Accede a tu cuenta</h1>
+          <h1 className={styles.title}>
+            {mode === "login" ? "Accede a tu cuenta" : "Crea tu cuenta"}
+          </h1>
           <p className={styles.subtitle}>
-            Inicia sesion con tu email. Este flujo esta listo para conectarse a
-            ASP.NET Core Web API.
+            {mode === "login"
+              ? "Inicia sesion con tu email."
+              : "Registra tus datos para crear un cliente."} Este flujo esta listo
+            para conectarse a ASP.NET Core Web API.
           </p>
         </header>
 
+        <div className={styles.modeSwitch}>
+          <button
+            type="button"
+            onClick={() => setMode("login")}
+            className={`${styles.modeButton} ${
+              mode === "login" ? styles.modeButtonActive : ""
+            }`}
+          >
+            Iniciar sesion
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("register")}
+            className={`${styles.modeButton} ${
+              mode === "register" ? styles.modeButtonActive : ""
+            }`}
+          >
+            Crear cuenta
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div
+            className={`${styles.registerFields} ${
+              mode === "register" ? styles.registerFieldsVisible : ""
+            }`}
+            aria-hidden={mode !== "register"}
+          >
+            <label className={styles.field}>
+              Nombre
+              <input
+                type="text"
+                placeholder="Juan"
+                value={formState.nombre}
+                onChange={(event) => handleChange("nombre", event.target.value)}
+                className={styles.input}
+                disabled={mode !== "register"}
+              />
+            </label>
+            <label className={styles.field}>
+              Apellido
+              <input
+                type="text"
+                placeholder="Perez"
+                value={formState.apellido}
+                onChange={(event) => handleChange("apellido", event.target.value)}
+                className={styles.input}
+                disabled={mode !== "register"}
+              />
+            </label>
+            <label className={styles.field}>
+              Telefono
+              <input
+                type="text"
+                placeholder="555-123"
+                value={formState.telefono}
+                onChange={(event) => handleChange("telefono", event.target.value)}
+                className={styles.input}
+                disabled={mode !== "register"}
+              />
+            </label>
+          </div>
+
           <label className={styles.field}>
             Email
             <input
@@ -110,19 +262,9 @@ export default function Login() {
             />
           </label>
 
-          <div className="flex items-center justify-between text-sm">
-            <label className={styles.checkbox}>
-              <input
-                type="checkbox"
-                checked={formState.remember}
-                onChange={(event) => handleChange("remember", event.target.checked)}
-              />
-              Recordarme
-            </label>
-            <Link href="/recuperar" className={styles.link}>
-              Olvidaste tu contrasena?
-            </Link>
-          </div>
+          {mode === "register" && (
+            <p className={styles.helper}>Rol asignado por defecto: {formState.idRol}</p>
+          )}
 
           {error && <p className={styles.error}>{error}</p>}
           {isSuccess && (
@@ -131,18 +273,32 @@ export default function Login() {
 
           <button
             type="submit"
-            className={styles.submit}
+            className={`${styles.submit} ${
+              mode === "register" ? styles.submitAlt : ""
+            }`}
             disabled={!canSubmit || isSubmitting}
           >
-            {isSubmitting ? "Validando..." : "Iniciar sesion"}
+            {isSubmitting
+              ? "Procesando..."
+              : mode === "login"
+                ? "Iniciar sesion"
+                : "Crear cuenta"}
           </button>
         </form>
 
         <footer className={styles.footer}>
-          <span className={styles.footerText}>Aun no tienes cuenta?</span>
-          <Link href="/registro" className={styles.linkStrong}>
-            Crear cuenta
-          </Link>
+          <span className={styles.footerText}>
+            {mode === "login"
+              ? "Aun no tienes cuenta?"
+              : "Ya tienes una cuenta?"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setMode(mode === "login" ? "register" : "login")}
+            className={styles.linkStrong}
+          >
+            {mode === "login" ? "Crear cuenta" : "Iniciar sesion"}
+          </button>
         </footer>
       </main>
     </div>

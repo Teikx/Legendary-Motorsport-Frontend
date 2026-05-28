@@ -6,7 +6,8 @@ type CartDrawerProps = {
   items: CartItem[];
   subtotal: number;
   onClose: () => void;
-  onUpdateQuantity: (itemId: string, quantity: number) => void;
+  onUpdateQuantity: (productId: number, quantity: number) => void;
+  onRemoveItem: (productId: number) => void;
   onProceedToCheckout: () => void;
 };
 
@@ -16,6 +17,7 @@ export default function CartDrawer({
   subtotal,
   onClose,
   onUpdateQuantity,
+  onRemoveItem,
   onProceedToCheckout,
 }: CartDrawerProps) {
   return (
@@ -57,11 +59,11 @@ export default function CartDrawer({
           ) : (
             items.map((item) => (
               <div
-                key={item.id}
+                key={item.idProducto}
                 className={styles.item}
               >
                 <img
-                  src={item.image}
+                  src={item.imageUrl}
                   alt={`${item.brand} ${item.model}`}
                   className={styles.itemImage}
                 />
@@ -70,7 +72,9 @@ export default function CartDrawer({
                     <p className={styles.itemTitle}>
                       {item.brand} {item.model}
                     </p>
-                    <p className={styles.itemMeta}>Color: {item.color}</p>
+                    <p className={styles.itemMeta}>
+                      Color: {item.color} · {item.mileage.toLocaleString("en-US")} km
+                    </p>
                   </div>
                   <div className={styles.itemRow}>
                     <p className={styles.itemPrice}>
@@ -80,7 +84,10 @@ export default function CartDrawer({
                       <button
                         type="button"
                         onClick={() =>
-                          onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))
+                          onUpdateQuantity(
+                            item.idProducto,
+                            Math.max(1, item.quantity - 1),
+                          )
                         }
                         className={styles.quantityButton}
                       >
@@ -90,11 +97,18 @@ export default function CartDrawer({
                       <button
                         type="button"
                         onClick={() =>
-                          onUpdateQuantity(item.id, item.quantity + 1)
+                          onUpdateQuantity(item.idProducto, item.quantity + 1)
                         }
                         className={styles.quantityButton}
                       >
                         +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveItem(item.idProducto)}
+                        className={styles.removeButton}
+                      >
+                        Eliminar
                       </button>
                     </div>
                   </div>

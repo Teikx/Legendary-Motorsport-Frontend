@@ -1,23 +1,46 @@
-export type Vehicle = {
-  id: string;
+export type CatalogVehicle = {
+  id: number;
   brand: string;
   model: string;
-  price: number;
+  imageUrl: string;
+  minPrice: number;
+  stockTotal: number;
+  colorsAvailable: number;
+};
+
+export type InventoryItem = {
+  idProducto: number;
+  color: string;
+  kilometraje: number;
+  precio: number;
   stock: number;
-  year: number;
-  mileage: number;
-  image: string;
-  colors: string[];
-  uploadedAt: string;
+};
+
+export type VehicleDetail = {
+  id: number;
+  brand: string;
+  model: string;
+  imageUrl: string;
+  inventory: InventoryItem[];
 };
 
 export type CartItem = {
-  id: string;
-  vehicleId: string;
+  idDetalleCarrito: number;
+  idProducto: number;
   brand: string;
   model: string;
-  price: number;
   color: string;
+  mileage: number;
+  price: number;
   quantity: number;
-  image: string;
+  subtotal: number;
+  imageUrl: string;
+};
+
+export type Cart = {
+  idCarrito: number;
+  idCliente: number;
+  total: number;
+  estado: string;
+  items: CartItem[];
 };
