@@ -207,26 +207,37 @@ export default function Catalog() {
     handleProceedToCheckout();
   };
 
-  const updateCartQuantity = useCallback(
-    async (productId: number, quantity: number) => {
-      try {
-        const response = await fetchWithAuth(`${API_BASE_URL}/api/carrito/items`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idProducto: productId, cantidad: quantity }),
-        });
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data) {
-          throw new Error("No se pudo actualizar el carrito");
+  const updateCartQuantity = async (productId: number, quantity: number) => {
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/carrito/items`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idProducto: productId, cantidad: quantity }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data) {
+        const message =
+          typeof data?.message === "string"
+            ? data.message
+            : typeof data?.error === "string"
+              ? data.error
+              : null;
+        if (response.status === 409 || /stock/i.test(message ?? "")) {
+          showStockWarning(
+            message ?? "No hay stock disponible para esta cantidad.",
+          );
+          void loadCart(); // Revertir los cambios locales con la data real
+          return;
         }
-        const formatted = formatCart(data);
-        setCartItems(formatted.items);
-      } catch (err) {
-        setError("No se pudo actualizar el carrito");
+        throw new Error("No se pudo actualizar el carrito");
       }
-    },
-    [fetchWithAuth],
-  );
+      const formatted = formatCart(data);
+      setCartItems(formatted.items);
+    } catch (err) {
+      setError("No se pudo actualizar el carrito");
+      void loadCart(); // Revertir en caso de cualquier error
+    }
+  };
 
   const handleUpdateQuantity = (productId: number, quantity: number) => {
     setCartItems((prev) =>
@@ -268,7 +279,6 @@ export default function Catalog() {
 
   return (
     <div className={styles.shell}>
-      <Header />
       {stockWarning && (
         <div className={styles.stockToast} role="alert">
           <div className={styles.stockToastInner}>
@@ -288,6 +298,7 @@ export default function Catalog() {
         </div>
       )}
       <div className={isDetailOpen ? styles.contentBlur : styles.content}>
+        <Header />
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>
@@ -342,15 +353,17 @@ export default function Catalog() {
           )}
         </section>
 
-        <CartDrawer
-          isOpen={isCartOpen}
-          items={cartItems}
-          subtotal={subtotal}
-          onClose={() => setIsCartOpen(false)}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onProceedToCheckout={handleProceedToCheckout}
-        />
+        {(!isDetailOpen || isCartOpen) && (
+          <CartDrawer
+            isOpen={isCartOpen}
+            items={cartItems}
+            subtotal={subtotal}
+            onClose={() => setIsCartOpen(false)}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onProceedToCheckout={handleProceedToCheckout}
+          />
+        )}
       </div>
 
       <VehicleDetailModal

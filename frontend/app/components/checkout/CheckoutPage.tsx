@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Header from "../header/Header";
 import styles from "./CheckoutPage.module.css";
+import { CreditCard } from "./CreditCard";
 
 type Address = {
   id: number;
@@ -64,6 +66,7 @@ const formatCurrency = (value: number) =>
   }).format(value);
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const [customer, setCustomer] = useState(mockCustomer);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -72,6 +75,7 @@ export default function CheckoutPage() {
   );
   const [selectedPaymentId, setSelectedPaymentId] = useState<number>(0);
   const [showNewAddress, setShowNewAddress] = useState(false);
+  const [showNewCard, setShowNewCard] = useState(false);
   const [newAddress, setNewAddress] = useState<Address>({
     id: 0,
     label: "",
@@ -454,6 +458,7 @@ export default function CheckoutPage() {
           throw new Error(data?.error ?? "No se pudo guardar la tarjeta");
         }
         await loadCards(idCliente);
+        setShowNewCard(false);
         setNewCard({ number: "", expiry: "", cvv: "", holder: "" });
       })
       .catch((err) => {
@@ -463,6 +468,7 @@ export default function CheckoutPage() {
 
   const handleEditCard = (card: Card) => {
     setEditingCardId(card.id);
+    setShowNewCard(true);
     setNewCard({
       number: card.number,
       expiry: card.expiry,
@@ -473,6 +479,7 @@ export default function CheckoutPage() {
 
   const handleCancelCardEdit = () => {
     setEditingCardId(null);
+    setShowNewCard(false);
     setNewCard({ number: "", expiry: "", cvv: "", holder: "" });
   };
 
@@ -514,6 +521,7 @@ export default function CheckoutPage() {
         }
         await loadCards(idCliente);
         setEditingCardId(null);
+        setShowNewCard(false);
         setNewCard({ number: "", expiry: "", cvv: "", holder: "" });
       })
       .catch((err) => {
@@ -540,6 +548,10 @@ export default function CheckoutPage() {
       .catch((err) => {
         setProfileError(err?.message ?? "No se pudo eliminar la tarjeta");
       });
+  };
+
+  const handleCancelCheckout = () => {
+    router.push("/catalog");
   };
 
   const handleSubmit = () => {
@@ -664,8 +676,17 @@ export default function CheckoutPage() {
               Revisa tu informacion y confirma el metodo de pago para finalizar la compra.
             </p>
           </div>
-          <div className={styles.infoBadge}>
-            Integracion activa con ASP.NET Core Web API
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.cancelCheckoutButton}
+              onClick={handleCancelCheckout}
+            >
+              Retroceder y cancelar
+            </button>
+            <div className={styles.infoBadge}>
+              Integracion activa con ASP.NET Core Web API
+            </div>
           </div>
         </div>
         {profileError && <p className={styles.error}>{profileError}</p>}
@@ -870,17 +891,18 @@ export default function CheckoutPage() {
             <div className={styles.panel}>
               <div className={styles.panelHeader}>
                 <h2 className={styles.panelTitle}>Metodo de pago</h2>
-                <span className={styles.badge}>Tarjetas vinculadas</span>
-              </div>
-              {editingCardId && (
                 <button
                   type="button"
-                  className={styles.link}
-                  onClick={handleCancelCardEdit}
+                  className={styles.addButton}
+                  onClick={() =>
+                    editingCardId
+                      ? handleCancelCardEdit()
+                      : setShowNewCard((prev) => !prev)
+                  }
                 >
-                  Cancelar edicion
+                  {showNewCard ? "Cancelar" : "Anadir tarjeta"}
                 </button>
-              )}
+              </div>
               <div className={styles.panelGridTwo}>
                 {cards.map((card) => (
                   <label key={card.id} className={styles.choice}>
@@ -890,12 +912,19 @@ export default function CheckoutPage() {
                       checked={selectedPaymentId === card.id}
                       onChange={() => setSelectedPaymentId(card.id)}
                     />
-                    <div>
-                      <p className={styles.choiceTitle}>{card.brand}</p>
-                      <p className={styles.choiceMeta}>
-                        **** **** **** {card.last4}
-                      </p>
-                      <p className={styles.choiceMeta}>{card.holder}</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", overflow: "hidden" }}>
+                      <CreditCard
+                        company={card.brand}
+                        cardNumber={
+                          card.number && card.number.length >= 15
+                            ? card.number.replace(/(.{4})/g, "$1 ").trim()
+                            : `**** **** **** ${card.last4}`
+                        }
+                        cardHolder={card.holder || "TITULAR"}
+                        cardExpiration={card.expiry || "MM/AA"}
+                        width={250}
+                        type={card.id % 2 === 0 ? "brand-dark" : "gray-dark"}
+                      />
                       <div className={styles.choiceActions}>
                         <button
                           type="button"
@@ -922,72 +951,74 @@ export default function CheckoutPage() {
                 </p>
               )}
 
-              <div className={styles.panelFormBlock}>
-                <label className={`${styles.field} ${styles.fullWidth}`}>
-                  Numero de tarjeta
-                  <input
-                    value={newCard.number}
-                    onChange={(event) =>
-                      setNewCard((prev) => ({ ...prev, number: event.target.value }))
-                    }
-                    placeholder="4242 4242 4242 4242"
-                    className={styles.input}
-                  />
-                  {errors.cardNumber && (
-                    <span className={styles.error}>{errors.cardNumber}</span>
-                  )}
-                </label>
-                <label className={styles.field}>
-                  Expiracion (MM/AA)
-                  <input
-                    value={newCard.expiry}
-                    onChange={(event) =>
-                      setNewCard((prev) => ({ ...prev, expiry: event.target.value }))
-                    }
-                    placeholder="08/27"
-                    className={styles.input}
-                  />
-                  {errors.cardExpiry && (
-                    <span className={styles.error}>{errors.cardExpiry}</span>
-                  )}
-                </label>
-                <label className={styles.field}>
-                  CVV
-                  <input
-                    value={newCard.cvv}
-                    onChange={(event) =>
-                      setNewCard((prev) => ({ ...prev, cvv: event.target.value }))
-                    }
-                    placeholder="123"
-                    className={styles.input}
-                  />
-                  {errors.cardCvv && (
-                    <span className={styles.error}>{errors.cardCvv}</span>
-                  )}
-                </label>
-                <label className={`${styles.field} ${styles.fullWidth}`}>
-                  Nombre del titular
-                  <input
-                    value={newCard.holder}
-                    onChange={(event) =>
-                      setNewCard((prev) => ({ ...prev, holder: event.target.value }))
-                    }
-                    className={styles.input}
-                  />
-                  {errors.cardHolder && (
-                    <span className={styles.error}>{errors.cardHolder}</span>
-                  )}
-                </label>
-                <div className={styles.formBlockAction}>
-                  <button
-                    type="button"
-                    className={styles.panelButton}
-                    onClick={editingCardId ? handleUpdateCard : handleAddCard}
-                  >
-                    {editingCardId ? "Guardar cambios" : "Guardar tarjeta"}
-                  </button>
+              {showNewCard && (
+                <div className={`${styles.panelFormBlock} ${styles.animatedFormBlock}`}>
+                  <label className={`${styles.field} ${styles.fullWidth}`}>
+                    Numero de tarjeta
+                    <input
+                      value={newCard.number}
+                      onChange={(event) =>
+                        setNewCard((prev) => ({ ...prev, number: event.target.value }))
+                      }
+                      placeholder="4242 4242 4242 4242"
+                      className={styles.input}
+                    />
+                    {errors.cardNumber && (
+                      <span className={styles.error}>{errors.cardNumber}</span>
+                    )}
+                  </label>
+                  <label className={styles.field}>
+                    Expiracion (MM/AA)
+                    <input
+                      value={newCard.expiry}
+                      onChange={(event) =>
+                        setNewCard((prev) => ({ ...prev, expiry: event.target.value }))
+                      }
+                      placeholder="08/27"
+                      className={styles.input}
+                    />
+                    {errors.cardExpiry && (
+                      <span className={styles.error}>{errors.cardExpiry}</span>
+                    )}
+                  </label>
+                  <label className={styles.field}>
+                    CVV
+                    <input
+                      value={newCard.cvv}
+                      onChange={(event) =>
+                        setNewCard((prev) => ({ ...prev, cvv: event.target.value }))
+                      }
+                      placeholder="123"
+                      className={styles.input}
+                    />
+                    {errors.cardCvv && (
+                      <span className={styles.error}>{errors.cardCvv}</span>
+                    )}
+                  </label>
+                  <label className={`${styles.field} ${styles.fullWidth}`}>
+                    Nombre del titular
+                    <input
+                      value={newCard.holder}
+                      onChange={(event) =>
+                        setNewCard((prev) => ({ ...prev, holder: event.target.value }))
+                      }
+                      className={styles.input}
+                    />
+                    {errors.cardHolder && (
+                      <span className={styles.error}>{errors.cardHolder}</span>
+                    )}
+                  </label>
+                  <div className={styles.formBlockAction}>
+                    <button
+                      type="button"
+                      className={styles.panelButton}
+                      onClick={editingCardId ? handleUpdateCard : handleAddCard}
+                    >
+                      {editingCardId ? "Guardar cambios" : "Guardar tarjeta"}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 
