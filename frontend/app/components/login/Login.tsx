@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./Login.module.css";
 
@@ -17,6 +18,7 @@ const initialState: LoginFormState = {
 };
 
 export default function Login() {
+  const router = useRouter();
   const [formState, setFormState] = useState<LoginFormState>(initialState);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,6 +62,7 @@ export default function Login() {
     setIsSubmitting(false);
     setIsSuccess(true);
     setFormState((prev) => ({ ...prev, Password: "" }));
+    router.push("/catalog");
 
     void payload;
   };

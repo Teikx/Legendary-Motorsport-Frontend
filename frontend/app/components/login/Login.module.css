@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: center;
   padding: 56px 24px;
+  min-height: 100vh;
+  width: 100%;
   color: var(--foreground);
   background: radial-gradient(circle at top, rgba(255, 221, 69, 0.06), transparent 45%),
     linear-gradient(135deg, #050505 0%, #0f0f10 55%, #060606 100%);
@@ -46,6 +48,7 @@
   z-index: 2;
   width: min(420px, 100%);
   padding: 36px 32px 30px;
+  margin: auto;
   border-radius: 24px;
   background: rgba(10, 10, 10, 0.86);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -218,5 +221,28 @@
   .footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .shell {
+    padding: 32px 16px;
+  }
+
+  .card {
+    width: 100%;
+    border-radius: 20px;
+  }
+}
+
+@media (max-height: 700px) {
+  .shell {
+    align-items: flex-start;
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .card {
+    margin-top: 0;
   }
 }
