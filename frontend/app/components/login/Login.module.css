@@ -1,0 +1,222 @@
+.shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  color: var(--foreground);
+  background: radial-gradient(circle at top, rgba(255, 221, 69, 0.06), transparent 45%),
+    linear-gradient(135deg, #050505 0%, #0f0f10 55%, #060606 100%);
+  overflow: hidden;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%231c1c1c' stroke-width='1'%3E%3Cpath d='M0 20h120'/%3E%3Cpath d='M0 60h120'/%3E%3Cpath d='M0 100h120'/%3E%3Cpath d='M20 0v120'/%3E%3Cpath d='M60 0v120'/%3E%3Cpath d='M100 0v120'/%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.35;
+  animation: drift 18s linear infinite;
+}
+
+.orb {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  filter: blur(0px);
+  opacity: 0.75;
+  animation: float 12s ease-in-out infinite;
+}
+
+.orbOne {
+  top: -90px;
+  right: -120px;
+  background: radial-gradient(circle, rgba(247, 198, 0, 0.4), transparent 70%);
+}
+
+.orbTwo {
+  bottom: -140px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(255, 221, 69, 0.25), transparent 70%);
+  animation-delay: -4s;
+}
+
+.card {
+  position: relative;
+  z-index: 2;
+  width: min(420px, 100%);
+  padding: 36px 32px 30px;
+  border-radius: 24px;
+  background: rgba(10, 10, 10, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  animation: enter 0.8s ease;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.kicker {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  color: var(--accent);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.input {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0 14px;
+  color: var(--foreground);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(247, 198, 0, 0.6);
+  box-shadow: 0 0 0 4px rgba(247, 198, 0, 0.12);
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.checkbox input {
+  accent-color: var(--accent);
+}
+
+.link {
+  color: var(--accent-2);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: var(--foreground);
+}
+
+.linkStrong {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.error {
+  font-size: 13px;
+  color: #ff7b7b;
+}
+
+.success {
+  font-size: 13px;
+  color: #9df3c4;
+}
+
+.submit {
+  margin-top: 4px;
+  height: 46px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(120deg, #f7c600, #ffdd45);
+  color: #0b0b0b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(247, 198, 0, 0.2);
+}
+
+.footer {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.footerText {
+  color: var(--muted);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(18px);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-40px, -40px, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 30px 24px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
