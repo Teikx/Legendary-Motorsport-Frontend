@@ -44,3 +44,17 @@ export type Cart = {
   estado: string;
   items: CartItem[];
 };
+
+export type Vehicle = {
+  id: string;
+  brand: string;
+  model: string;
+  price: number;
+  stock: number;
+  year: number;
+  mileage: number;
+  image: string;
+  colors: string[];
+  uploadedAt: string;
+};
+
