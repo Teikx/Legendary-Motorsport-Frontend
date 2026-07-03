@@ -1,0 +1,436 @@
+.container {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.mainWrapper {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  flex: 1;
+  max-width: 76rem;
+  width: 100%;
+  margin: 0 auto;
+  margin-bottom: 24px;
+}
+
+/* Panel izquierdo: Visualizador */
+.previewPanel {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--night);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  min-height: 500px;
+}
+
+.imageContainer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.heroImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.previewPanel:hover .heroImage {
+  transform: scale(1.03);
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 5, 5, 0.1) 0%,
+    rgba(5, 5, 5, 0.5) 50%,
+    rgba(5, 5, 5, 0.95) 100%
+  );
+  z-index: 1;
+}
+
+.vehicleInfoCard {
+  position: relative;
+  z-index: 2;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.badge {
+  align-self: flex-start;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: rgba(247, 198, 0, 0.15);
+  color: var(--accent-2);
+  border: 1px solid rgba(247, 198, 0, 0.3);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.heroTitle {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.highlightText {
+  color: var(--accent);
+}
+
+.heroDescription {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 90%;
+  margin: 0;
+}
+
+.specsGrid {
+  display: flex;
+  gap: 40px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+}
+
+.specItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.specLabel {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.specValue {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Panel derecho: Formulario */
+.formPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.formCard {
+  background: linear-gradient(135deg, var(--night) 0%, var(--night-2) 100%);
+  border: 1px solid rgba(247, 198, 0, 0.12);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.formHeader {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Indicador de pasos */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 18px;
+  border-radius: 12px;
+}
+
+.stepNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.stepActive {
+  opacity: 1;
+}
+
+.stepNumber {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.stepActive .stepNumber {
+  background: var(--accent);
+  color: var(--background);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(247, 198, 0, 0.4);
+}
+
+.stepLabelText {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stepActive .stepLabelText {
+  color: var(--accent);
+}
+
+.stepLine {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 12px;
+  margin-bottom: 20px; /* alinea con el círculo */
+}
+
+/* Contenido de pasos */
+.stepContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+
+/* Grilla de selección de autos */
+.vehicleGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Estilo para barra de scroll premium */
+.vehicleGrid::-webkit-scrollbar {
+  width: 6px;
+}
+.vehicleGrid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+.vehicleGrid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.vehicleGrid::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+.vehicleCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--foreground);
+}
+
+.vehicleCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(247, 198, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.vehicleCardActive {
+  background: rgba(247, 198, 0, 0.08);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(247, 198, 0, 0.15);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.cardBrand {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.vehicleCardActive .cardBrand {
+  color: var(--accent);
+}
+
+.cardModel {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cardSpecMini {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardDot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Marcadores de pasos posteriores */
+.stepContentPlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.placeholderText {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 10px;
+  max-width: 80%;
+}
+
+/* Navegación */
+.navigationActions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 24px;
+}
+
+.backButton {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--foreground);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.nextButton {
+  flex: 2;
+  background: var(--accent);
+  border: none;
+  color: var(--background);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nextButton:hover:not(:disabled) {
+  background: var(--accent-2);
+  box-shadow: 0 0 20px rgba(247, 198, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.nextButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .mainWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .previewPanel {
+    min-height: 380px;
+  }
+
+  .heroTitle {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px;
+  }
+
+  .formCard {
+    padding: 20px;
+  }
+
+  .specsGrid {
+    gap: 20px;
+  }
+
+  .heroTitle {
+    font-size: 26px;
+  }
+}
