@@ -1,4 +1,15 @@
-import { Vehicle } from "./types";
+export interface Vehicle {
+  id: string;
+  brand: string;
+  model: string;
+  price: number;
+  stock: number;
+  year: number;
+  mileage: number;
+  image: string;
+  colors: string[];
+  uploadedAt: string;
+}
 
 export const vehicles: Vehicle[] = [
   {

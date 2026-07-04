@@ -40,6 +40,34 @@
   gap: 12px;
 }
 
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navLink {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.navLink:hover {
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.navLinkActive {
+  color: var(--accent);
+  background: rgba(247, 198, 0, 0.08);
+  border-color: rgba(247, 198, 0, 0.2);
+}
+
 .userButton {
   border-radius: 999px;
   border: 1px solid rgba(247, 198, 0, 0.4);
@@ -78,6 +106,12 @@
     margin-bottom: 24px;
     justify-content: center;
     text-align: center;
+  }
+
+  .nav {
+    width: 100%;
+    justify-content: center;
+    order: 3;
   }
 
   .actions {
