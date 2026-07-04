@@ -10,6 +10,39 @@ interface VinHistoryEntry {
   timestamp: string;
 }
 
+const VEHICLES = [
+  "Pegassi Osiris",
+  "Grotti Turismo R",
+  "Truffade Adder",
+  "Pegassi Zentorno",
+  "Progen T20",
+  "Overflod Entity XF",
+  "Dewbauchee Vagner",
+];
+
+const WORKSHOPS = [
+  "Legendary Motorsport HQ (Rockford Hills)",
+  "Los Santos Customs (Burton)",
+  "Los Santos Customs (LSIA)",
+  "Benny's Original Motor Works (Strawberry)",
+];
+
+const SERVICES = [
+  "Mantenimiento de Alto Rendimiento (Preventivo)",
+  "Planchado, Pintura y Restauración de Chasis",
+  "Actualización de Blindaje y Neumáticos a Prueba de Balas",
+  "Inspección de Campaña de Seguridad (Recall)",
+];
+
+const BASE_TIME_SLOTS = [
+  { time: "09:00 AM", available: true },
+  { time: "10:30 AM", available: false },
+  { time: "12:00 PM", available: true },
+  { time: "01:30 PM", available: true },
+  { time: "03:00 PM", available: false },
+  { time: "04:30 PM", available: true },
+];
+
 export default function Postventa() {
   // VIN Checker State
   const [vin, setVin] = useState("");
@@ -39,8 +72,24 @@ export default function Postventa() {
   // Card 3: Warranty insurance
   const [warrantyPlan, setWarrantyPlan] = useState<"basic" | "gold" | "platinum">("gold");
 
+  // Booking Form State
+  const [bookingSubmitted, setBookingSubmitted] = useState(false);
+  const [bookingCode, setBookingCode] = useState("");
+  const [availableSlots, setAvailableSlots] = useState(BASE_TIME_SLOTS);
+  const [formData, setFormData] = useState({
+    vehiculo: VEHICLES[0],
+    taller: WORKSHOPS[0],
+    tipoServicio: SERVICES[0],
+    fecha: "",
+    hora: "09:00 AM",
+    nombre: "",
+    email: "",
+    telefono: "",
+  });
+
   // Section Refs for Smooth Scrolling
   const vinRef = useRef<HTMLDivElement>(null);
+  const bookingRef = useRef<HTMLDivElement>(null);
 
   const handleVinCheck = (e?: FormEvent) => {
     if (e) e.preventDefault();
@@ -113,7 +162,51 @@ export default function Postventa() {
     setVinResult(null);
   };
 
-  const handleFaqScroll = (elementRef: React.RefObject<HTMLDivElement | null>) => {
+  const handleDateChange = (dateVal: string) => {
+    setFormData((prev) => ({ ...prev, fecha: dateVal }));
+    // Shuffle slots slightly to simulate database queries on different dates
+    const shuffled = BASE_TIME_SLOTS.map((slot) => {
+      // Keep at least some available, customize based on weekday vs weekend
+      const isWeekend = new Date(dateVal).getDay() % 6 === 0;
+      if (isWeekend && (slot.time.includes("03:00") || slot.time.includes("04:30"))) {
+        return { ...slot, available: false }; // Closed late on weekends
+      }
+      return {
+        ...slot,
+        available: Math.random() > 0.4, // Randomize availability
+      };
+    });
+    setAvailableSlots(shuffled);
+  };
+
+  const handleBookingSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!formData.nombre || !formData.email || !formData.fecha) {
+      alert("Por favor complete todos los campos obligatorios.");
+      return;
+    }
+
+    // Generate random booking ID
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    setBookingCode(`LMS-BK-${rand}`);
+    setBookingSubmitted(true);
+  };
+
+  const resetBooking = () => {
+    setBookingSubmitted(false);
+    setFormData({
+      vehiculo: VEHICLES[0],
+      taller: WORKSHOPS[0],
+      tipoServicio: SERVICES[0],
+      fecha: "",
+      hora: "09:00 AM",
+      nombre: "",
+      email: "",
+      telefono: "",
+    });
+  };
+
+  const scrollToSection = (elementRef: React.RefObject<HTMLDivElement | null>) => {
     elementRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -134,8 +227,8 @@ export default function Postventa() {
 
   // Simulating Armor & Weight calculation for Card 1 (Blindaje y Pintura)
   const getArmorStats = () => {
-    let protection = 25; // in %
-    let weightPenalty = 0; // in kg
+    let protection = 25;
+    let weightPenalty = 0;
     if (armorLevel === "heavy") {
       protection = 65;
       weightPenalty = 180;
@@ -198,13 +291,14 @@ export default function Postventa() {
             <button 
               type="button" 
               className={styles.btnPrimary}
+              onClick={() => scrollToSection(bookingRef)}
             >
               Agendar Cita en Taller
             </button>
             <button 
               type="button" 
               className={styles.btnSecondary}
-              onClick={() => handleFaqScroll(vinRef)}
+              onClick={() => scrollToSection(vinRef)}
             >
               Verificar Campañas de Seguridad
             </button>
@@ -591,6 +685,228 @@ export default function Postventa() {
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Booking Appointment Section */}
+      <section ref={bookingRef} className={styles.bookingSection}>
+        <div className={styles.sectionTitleBlock}>
+          <h2 className={styles.sectionTitle}>Agenda tu Cita en Taller</h2>
+          <p className={styles.sectionSubtitle}>Reserva un turno preferente en el concesionario y taller de tu elección.</p>
+        </div>
+
+        <div className={styles.bookingLayout}>
+          {!bookingSubmitted ? (
+            <form onSubmit={handleBookingSubmit} className={styles.bookingForm}>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Selecciona tu Vehículo</label>
+                  <select
+                    value={formData.vehiculo}
+                    onChange={(e) => setFormData({ ...formData, vehiculo: e.target.value })}
+                    className={styles.select}
+                  >
+                    {VEHICLES.map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Selecciona el Taller Sucursal</label>
+                  <select
+                    value={formData.taller}
+                    onChange={(e) => setFormData({ ...formData, taller: e.target.value })}
+                    className={styles.select}
+                  >
+                    {WORKSHOPS.map((w) => (
+                      <option key={w} value={w}>
+                        {w}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Tipo de Servicio Requerido</label>
+                  <select
+                    value={formData.tipoServicio}
+                    onChange={(e) => setFormData({ ...formData, tipoServicio: e.target.value })}
+                    className={styles.select}
+                  >
+                    {SERVICES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Fecha Deseada *</label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.fecha}
+                    onChange={(e) => handleDateChange(e.target.value)}
+                    className={styles.input}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+              </div>
+
+              {/* Time Slots Grid Selection */}
+              {formData.fecha && (
+                <div className={styles.slotSection}>
+                  <label className={styles.label}>Horarios Disponibles para esta Fecha</label>
+                  <div className={styles.slotsGrid}>
+                    {availableSlots.map((slot, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        disabled={!slot.available}
+                        onClick={() => setFormData({ ...formData, hora: slot.time })}
+                        className={`${styles.slotBtn} ${
+                          formData.hora === slot.time ? styles.slotBtnSelected : ""
+                        } ${!slot.available ? styles.slotBtnDisabled : ""}`}
+                      >
+                        {slot.time}
+                        {!slot.available && <span className={styles.slotBadge}>Ocupado</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.formGrid} style={{ marginTop: "20px" }}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Nombre Completo *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Franklin Clinton"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="correo@ejemplo.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Número Telefónico</label>
+                  <input
+                    type="tel"
+                    placeholder="555-0199"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className={styles.btnSubmit} style={{ marginTop: "24px" }}>
+                Confirmar Reserva
+              </button>
+            </form>
+          ) : (
+            <div className={styles.successCard}>
+              <div className={styles.successIcon}>✓</div>
+              <h3 className={styles.successTitle}>¡Reserva Confirmada Exitosamente!</h3>
+              <p className={styles.successText}>
+                Su turno ha sido agendado. Presente este pase VIP en el taller seleccionado 
+                para recibir atención inmediata sin esperas.
+              </p>
+
+              <div className={styles.detailsBox}>
+                <div className={styles.detailsRow}>
+                  <span className={styles.detailsLabel}>Código Cita</span>
+                  <span className={styles.detailsVal} style={{ color: "var(--accent)", fontWeight: "bold" }}>
+                    {bookingCode}
+                  </span>
+                </div>
+                <div className={styles.detailsRow}>
+                  <span className={styles.detailsLabel}>Vehículo</span>
+                  <span className={styles.detailsVal}>{formData.vehiculo}</span>
+                </div>
+                <div className={styles.detailsRow}>
+                  <span className={styles.detailsLabel}>Taller Sucursal</span>
+                  <span className={styles.detailsVal}>{formData.taller}</span>
+                </div>
+                <div className={styles.detailsRow}>
+                  <span className={styles.detailsLabel}>Servicio</span>
+                  <span className={styles.detailsVal}>{formData.tipoServicio}</span>
+                </div>
+                <div className={styles.detailsRow}>
+                  <span className={styles.detailsLabel}>Fecha / Hora</span>
+                  <span className={styles.detailsVal}>{formData.fecha} a las {formData.hora}</span>
+                </div>
+                <div className={styles.detailsRow}>
+                  <span className={styles.detailsLabel}>Cliente</span>
+                  <span className={styles.detailsVal}>{formData.nombre}</span>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+                <button type="button" onClick={() => window.print()} className={styles.btnPrimary}>
+                  🖨️ Imprimir Pase VIP
+                </button>
+                <button type="button" onClick={resetBooking} className={styles.btnSecondary}>
+                  Agendar Otra Cita
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Real-time VIP Ticket Preview Side Card */}
+          {!bookingSubmitted && (
+            <div className={styles.previewCard}>
+              <div className={styles.previewHeader}>
+                <span className={styles.previewBrand}>LEGENDARY MOTORSPORT</span>
+                <span className={styles.previewBadge}>VIP PASS</span>
+              </div>
+              <div className={styles.previewContent}>
+                <div className={styles.previewMain}>
+                  <div className={styles.previewRow}>
+                    <span className={styles.previewLabel}>PROPIETARIO</span>
+                    <span className={styles.previewVal}>{formData.nombre || "INTRUSO ANÓNIMO"}</span>
+                  </div>
+                  <div className={styles.previewRow}>
+                    <span className={styles.previewLabel}>HIPERCOCHE</span>
+                    <span className={styles.previewVal}>{formData.vehiculo}</span>
+                  </div>
+                  <div className={styles.previewRow}>
+                    <span className={styles.previewLabel}>DESTINO TALLER</span>
+                    <span className={styles.previewVal}>{formData.taller}</span>
+                  </div>
+                  <div className={styles.previewRow}>
+                    <span className={styles.previewLabel}>RESERVA FECHA</span>
+                    <span className={styles.previewVal}>{formData.fecha || "FECHA PENDIENTE"}</span>
+                  </div>
+                  <div className={styles.previewRow}>
+                    <span className={styles.previewLabel}>HORA TURNO</span>
+                    <span className={styles.previewVal}>{formData.hora}</span>
+                  </div>
+                </div>
+                <div className={styles.previewBarcode}>
+                  <div className={styles.barcodeLines}></div>
+                  <span className={styles.barcodeText}>LMS-VIP-CHECK-IN</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

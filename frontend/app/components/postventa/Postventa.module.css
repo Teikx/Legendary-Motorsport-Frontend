@@ -595,6 +595,324 @@
   border: 1px solid rgba(247, 198, 0, 0.25);
 }
 
+/* Booking Form Section */
+.bookingSection {
+  background: linear-gradient(135deg, var(--night), rgba(10, 10, 10, 0.99));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 60px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+}
+
+.bookingLayout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+@media (max-width: 960px) {
+  .bookingLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bookingForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.select, .input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--foreground);
+  font-size: 13.5px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.select:focus, .input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.select option {
+  background: #111;
+  color: #fff;
+}
+
+/* Live slots style */
+.slotSection {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.slotBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--foreground);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.slotBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.slotBtnSelected {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 700;
+}
+
+.slotBtnDisabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.slotBadge {
+  font-size: 8px;
+  background: #e74c3c;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.btnSubmit {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.btnSubmit:hover {
+  background: var(--accent-2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(247, 198, 0, 0.35);
+}
+
+/* Success Card */
+.successCard {
+  grid-column: span 2;
+  text-align: center;
+  padding: 30px 20px;
+  animation: scaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  background: rgba(46, 204, 113, 0.12);
+  border: 2px solid #2ecc71;
+  color: #2ecc71;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 auto 20px;
+}
+
+.successTitle {
+  font-size: 22px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  color: var(--foreground);
+}
+
+.successText {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.detailsBox {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 450px;
+  margin: 0 auto 30px;
+  text-align: left;
+}
+
+.detailsRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+}
+
+.detailsRow:last-child {
+  border-bottom: none;
+}
+
+.detailsLabel {
+  color: var(--muted);
+}
+
+.detailsVal {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+/* VIP Ticket Preview Card */
+.previewCard {
+  background: linear-gradient(135deg, #181818, #0e0e0e);
+  border: 2px dashed rgba(247, 198, 0, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  position: sticky;
+  top: 20px;
+}
+
+.previewHeader {
+  background: rgba(247, 198, 0, 0.12);
+  border-bottom: 1px dashed rgba(247, 198, 0, 0.25);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.previewBrand {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+}
+
+.previewBadge {
+  font-size: 10px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.previewContent {
+  padding: 24px 20px;
+}
+
+.previewRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+}
+
+.previewRow:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.previewLabel {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.previewVal {
+  font-size: 13.5px;
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.previewBarcode {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.6;
+}
+
+.barcodeLines {
+  width: 100%;
+  height: 40px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--foreground),
+    var(--foreground) 2px,
+    transparent 2px,
+    transparent 6px,
+    var(--foreground) 6px,
+    var(--foreground) 7px,
+    transparent 7px,
+    transparent 11px
+  );
+}
+
+.barcodeText {
+  font-size: 9px;
+  font-family: monospace;
+  letter-spacing: 0.2em;
+}
+
 /* Animations */
 @keyframes slideDown {
   from {
@@ -604,6 +922,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
