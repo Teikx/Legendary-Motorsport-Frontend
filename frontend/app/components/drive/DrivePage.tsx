@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./DrivePage.module.css";
 import Header from "../header/Header";
 
@@ -82,13 +82,50 @@ export default function DrivePage() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedVehicle, setSelectedVehicle] = useState<TestDriveVehicle>(VEHICLES_FOR_DRIVE[0]);
 
+  // Form states (Paso 2)
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [licencia, setLicencia] = useState("");
+  
+  // Validation errors
+  const [error, setError] = useState<string | null>(null);
+
+  // Load user data on mount
+  useEffect(() => {
+    const storedName = localStorage.getItem("nombre")?.trim();
+    const storedEmail = localStorage.getItem("email")?.trim();
+    const storedPhone = localStorage.getItem("telefono")?.trim();
+    
+    if (storedName) setNombre(storedName);
+    if (storedEmail) setEmail(storedEmail);
+    if (storedPhone) setTelefono(storedPhone);
+  }, []);
+
+  const validateStep2 = () => {
+    if (!nombre.trim()) return "El nombre completo es obligatorio.";
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) return "Ingresa un correo electrónico válido.";
+    if (!telefono.trim()) return "El teléfono de contacto es obligatorio.";
+    if (!licencia.trim()) return "El número de licencia de conducir es obligatorio.";
+    return null;
+  };
+
   const handleNextStep = () => {
-    if (step < 4) {
-      setStep((prev) => (prev + 1) as 1 | 2 | 3 | 4);
+    setError(null);
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      const err = validateStep2();
+      if (err) {
+        setError(err);
+      } else {
+        setStep(3);
+      }
     }
   };
 
   const handlePrevStep = () => {
+    setError(null);
     if (step > 1) {
       setStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
     }
@@ -162,7 +199,7 @@ export default function DrivePage() {
               </div>
             </div>
 
-            {/* Contenido dinámico del Paso 1: Selección de Vehículo */}
+            {/* Paso 1: Selección de Vehículo */}
             {step === 1 && (
               <div className={styles.stepContent}>
                 <h3 className={styles.stepTitle}>Selecciona tu modelo de prueba</h3>
@@ -191,16 +228,60 @@ export default function DrivePage() {
               </div>
             )}
 
-            {/* Marcadores de posición para los siguientes pasos (se implementarán en futuros commits) */}
+            {/* Paso 2: Datos de Contacto */}
             {step === 2 && (
-              <div className={styles.stepContentPlaceholder}>
-                <h3 className={styles.stepTitle}>Datos de Contacto</h3>
-                <p className={styles.placeholderText}>
-                  Aquí se presentará el formulario de contacto (Próximo commit).
-                </p>
+              <div className={styles.stepContent}>
+                <h3 className={styles.stepTitle}>Datos del Conductor</h3>
+                <div className={styles.formGrid}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel} htmlFor="nombre">Nombre Completo</label>
+                    <input
+                      type="text"
+                      id="nombre"
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
+                      placeholder="Ej: Michael De Santa"
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel} htmlFor="email">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Ej: michael@vinewood.com"
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel} htmlFor="telefono">Teléfono de Contacto</label>
+                    <input
+                      type="tel"
+                      id="telefono"
+                      value={telefono}
+                      onChange={(e) => setTelefono(e.target.value)}
+                      placeholder="Ej: 555-0199"
+                      className={styles.formInput}
+                    />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel} htmlFor="licencia">Número de Licencia de Conducir</label>
+                    <input
+                      type="text"
+                      id="licencia"
+                      value={licencia}
+                      onChange={(e) => setLicencia(e.target.value)}
+                      placeholder="Ej: L-38491823"
+                      className={styles.formInput}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
+            {/* Paso 3: Programar Cita */}
             {step === 3 && (
               <div className={styles.stepContentPlaceholder}>
                 <h3 className={styles.stepTitle}>Programar Cita</h3>
@@ -210,12 +291,21 @@ export default function DrivePage() {
               </div>
             )}
 
+            {/* Paso 4: Confirmación */}
             {step === 4 && (
               <div className={styles.stepContentPlaceholder}>
                 <h3 className={styles.stepTitle}>Confirmación</h3>
                 <p className={styles.placeholderText}>
                   Aquí se presentará el resumen y la confirmación final (Próximo commit).
                 </p>
+              </div>
+            )}
+
+            {/* Mensaje de error general de validación */}
+            {error && (
+              <div className={styles.errorContainer}>
+                <span className={styles.errorIcon}>⚠</span>
+                <span className={styles.errorMessage}>{error}</span>
               </div>
             )}
 
@@ -234,7 +324,7 @@ export default function DrivePage() {
                 type="button"
                 className={styles.nextButton}
                 onClick={handleNextStep}
-                disabled={step > 1} // Limitado temporalmente al paso 1 en este commit
+                disabled={step > 2} // Limitado temporalmente al paso 2 en este commit
               >
                 Siguiente
               </button>

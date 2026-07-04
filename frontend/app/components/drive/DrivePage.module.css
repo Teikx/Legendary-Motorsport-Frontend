@@ -330,25 +330,459 @@
   color: rgba(255, 255, 255, 0.2);
 }
 
-/* Marcadores de pasos posteriores */
-.stepContentPlaceholder {
-  flex: 1;
+/* Estilos para Paso 2: Datos */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inputGroup {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.formInput {
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0 16px;
+  color: var(--foreground);
+  font-size: 14px;
+  transition: all 0.25s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 10px rgba(247, 198, 0, 0.15);
+}
+
+/* Estilos para Paso 3: Cita */
+.appointmentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.timeSection, .locationSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.timeSlotButton {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeSlotButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(247, 198, 0, 0.4);
+}
+
+.timeSlotActive {
+  background: rgba(247, 198, 0, 0.12);
+  border-color: var(--accent);
+  color: var(--accent-2);
+  box-shadow: 0 0 10px rgba(247, 198, 0, 0.1);
+}
+
+.locationGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.locationGrid::-webkit-scrollbar {
+  width: 6px;
+}
+.locationGrid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.locationGrid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.locationCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.locationCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(247, 198, 0, 0.3);
+}
+
+.locationCardActive {
+  background: rgba(247, 198, 0, 0.06);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(247, 198, 0, 0.1);
+}
+
+.locationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.locationName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.locationCardActive .locationName {
+  color: var(--accent);
+}
+
+.locationAddress {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.locationDescription {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* Estilos para Paso 4: Confirmación */
+.summaryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summarySection {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.summarySubtitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(247, 198, 0, 0.15);
+  padding-bottom: 6px;
+}
+
+.summaryVehicleDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+@media (max-width: 500px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summaryText {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.summaryText strong {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.termsContainer {
+  margin-top: 8px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.checkboxText {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Errores */
+.errorContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 123, 123, 0.1);
+  border: 1px solid rgba(255, 123, 123, 0.25);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 16px;
+}
+
+.errorIcon {
+  color: #ff7b7b;
+  font-weight: bold;
+}
+
+.errorMessage {
+  font-size: 13px;
+  color: #ff7b7b;
+}
+
+/* Pantalla de Éxito */
+.successPanel {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   text-align: center;
-  border: 2px dashed rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 40px 20px;
+  padding: 10px 0;
+}
+
+.successHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.successIconWrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(247, 198, 0, 0.1);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  box-shadow: 0 0 20px rgba(247, 198, 0, 0.2);
+}
+
+.successIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.successTitle {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.successSubtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+  max-width: 90%;
+}
+
+.ticketCard {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.ticketHeader {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: rgba(255, 255, 255, 0.01);
 }
 
-.placeholderText {
+.ticketLabel {
+  font-size: 10px;
+  font-weight: 700;
   color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.ticketCode {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.ticketDivider {
+  height: 1px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  margin: 0 16px;
+}
+
+.ticketBody {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ticketRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.ticketRowLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ticketRowValue {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.instructionsBox {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: left;
+  margin-bottom: 32px;
+}
+
+.instructionsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--foreground);
+}
+
+.instructionsList {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.instructionsList li {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.successActions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.resetButton {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--foreground);
+  border-radius: 10px;
+  padding: 12px;
   font-size: 14px;
-  margin-top: 10px;
-  max-width: 80%;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resetButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.catalogButton {
+  flex: 1;
+  background: var(--accent);
+  border: none;
+  color: var(--background);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.catalogButton:hover {
+  background: var(--accent-2);
+  box-shadow: 0 0 20px rgba(247, 198, 0, 0.35);
 }
 
 /* Navegación */
@@ -433,4 +867,24 @@
   .heroTitle {
     font-size: 26px;
   }
+}
+
+.stepContentPlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.placeholderText {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 10px;
+  max-width: 80%;
 }
