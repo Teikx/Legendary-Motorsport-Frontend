@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import CartDrawer from "./CartDrawer";
 import VehicleDetailModal from "./VehicleDetailModal";
 import VehicleCard from "./VehicleCard";
-import { Cart, CartItem, CatalogVehicle, VehicleDetail } from "./types";
+import CreditApplicationModal from "./CreditApplicationModal";
+import { Cart, CartItem, CatalogVehicle, VehicleDetail, InventoryItem } from "./types";
 import styles from "./Catalog.module.css";
 import Header from "../header/Header";
 
@@ -66,6 +67,8 @@ export default function Catalog() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCreditOpen, setIsCreditOpen] = useState(false);
+  const [selectedCreditInventory, setSelectedCreditInventory] = useState<InventoryItem | null>(null);
   const router = useRouter();
   const updateTimers = useRef<Record<number, ReturnType<typeof setTimeout> | null>>(
     {},
@@ -372,6 +375,21 @@ export default function Catalog() {
         onClose={closeVehicleDetail}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
+        onApplyCredit={(selectedInventory) => {
+          setSelectedCreditInventory(selectedInventory);
+          setIsCreditOpen(true);
+          setIsDetailOpen(false);
+        }}
+      />
+
+      <CreditApplicationModal
+        vehicle={selectedVehicle}
+        selectedInventory={selectedCreditInventory}
+        isOpen={isCreditOpen}
+        onClose={() => {
+          setIsCreditOpen(false);
+          setSelectedCreditInventory(null);
+        }}
       />
     </div>
   );
