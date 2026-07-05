@@ -178,15 +178,22 @@ export default function CreditApplicationModal({
 
         {submitSuccess ? (
           <div className={styles.successScreen}>
-            <div className={styles.successIcon}>✓</div>
-            <h3>Solicitud Recibida</h3>
-            <p>
-              Hemos registrado tus datos correctamente. Próximamente se habilitará el análisis 
-              automatizado para ver si eres apto para el <strong>{vehicle.brand} {vehicle.model}</strong> y las 
-              opciones personalizadas de financiamiento.
-            </p>
+            <h2 className={styles.title}>Solicitud de crédito</h2>
+            <p className={styles.summary}>Tu solicitud ha sido enviada con éxito. A continuación se muestra el resumen de los datos ingresados:</p>
+            <ul className={styles.dataList}>
+              <li><strong>Nombre completo:</strong> {formState.fullName}</li>
+              <li><strong>Email:</strong> {formState.email}</li>
+              <li><strong>Teléfono:</strong> {formState.phone}</li>
+              <li><strong>Documento ID:</strong> {formState.dni}</li>
+              <li><strong>Ingresos mensuales:</strong> ${formState.monthlyIncome}</li>
+              <li><strong>Egresos mensuales:</strong> ${formState.monthlyExpenses}</li>
+              <li><strong>Antigüedad laboral:</strong> {formState.workSeniorityYears} años</li>
+              <li><strong>Historial crediticio:</strong> {formState.creditHistory}</li>
+              <li><strong>Pie / Enganche:</strong> ${formState.downPayment}</li>
+              <li><strong>Plazo:</strong> {formState.termMonths} meses</li>
+            </ul>
             <button type="button" className={styles.actionButtonPrimary} onClick={handleClose}>
-              Entendido
+              Cerrar
             </button>
           </div>
         ) : (
