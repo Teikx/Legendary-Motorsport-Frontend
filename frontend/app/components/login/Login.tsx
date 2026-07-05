@@ -159,12 +159,12 @@ export default function Login() {
   };
 
   return (
-    <div className={`${styles.shell} min-h-screen`}>
+    <div className={styles.shell}>
       <div className={styles.backdrop} />
       <div className={`${styles.orb} ${styles.orbOne}`} />
       <div className={`${styles.orb} ${styles.orbTwo}`} />
 
-      <main className={`${styles.card} shadow-2xl`}>
+      <main className={styles.card}>
         <header className={styles.header}>
           <p className={styles.kicker}>LegendaryMotorsport</p>
           <h1 className={styles.title}>
@@ -199,7 +199,7 @@ export default function Login() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className={styles.form}>
           <div
             className={`${styles.registerFields} ${
               mode === "register" ? styles.registerFieldsVisible : ""
