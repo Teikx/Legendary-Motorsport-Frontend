@@ -176,15 +176,18 @@ export default function CheckoutPage() {
           }),
         );
         setAddresses(mapped);
-        const hasSelected = mapped.some((item) => item.id === selectedAddressId);
-        if (mapped.length > 0 && (!selectedAddressId || !hasSelected)) {
-          setSelectedAddressId(mapped[0].id);
-        }
+        // Use functional update to avoid stale closure — don't add selectedAddressId as dep
+        setSelectedAddressId((prev) => {
+          if (mapped.length > 0 && (!prev || !mapped.some((item) => item.id === prev))) {
+            return mapped[0].id;
+          }
+          return prev;
+        });
       } catch (err) {
         setProfileError("No se pudieron cargar las direcciones");
       }
     },
-    [fetchWithAuth, selectedAddressId],
+    [fetchWithAuth],
   );
 
   const loadCards = useCallback(
@@ -211,15 +214,18 @@ export default function CheckoutPage() {
           };
         });
         setCards(mapped);
-        const hasSelected = mapped.some((item) => item.id === selectedPaymentId);
-        if (mapped.length > 0 && (!selectedPaymentId || !hasSelected)) {
-          setSelectedPaymentId(mapped[0].id);
-        }
+        // Use functional update to avoid stale closure — don't add selectedPaymentId as dep
+        setSelectedPaymentId((prev) => {
+          if (mapped.length > 0 && (!prev || !mapped.some((item) => item.id === prev))) {
+            return mapped[0].id;
+          }
+          return prev;
+        });
       } catch (err) {
         setProfileError("No se pudieron cargar las tarjetas");
       }
     },
-    [fetchWithAuth, selectedPaymentId],
+    [fetchWithAuth],
   );
 
   const loadCart = useCallback(async () => {
@@ -267,7 +273,8 @@ export default function CheckoutPage() {
       setProfileError("No se encontro el cliente autenticado");
     }
     void loadCart();
-  }, [loadCart, loadAddresses, loadCards, loadCustomer]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount — functions are stable (no reactive state in deps)
 
   const handleAddAddress = () => {
     const draftErrors: Record<string, string> = {};

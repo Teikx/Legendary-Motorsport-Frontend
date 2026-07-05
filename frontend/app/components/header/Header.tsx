@@ -34,9 +34,14 @@ export default function Header() {
         <h1 className={styles.title}>Legendary MotorSport</h1>
       </div>
       
+
+      
       <nav className={styles.nav}>
-        <Link href="/catalog" className={`${styles.navLink} ${pathname === "/catalog" ? styles.navLinkActive : ""}`}>
+        <Link href="/catalog" className={pathname === "/catalog" ? styles.navLinkActive : styles.navLink}>
           Catálogo
+        </Link>
+        <Link href="/postventa" className={pathname === "/postventa" ? styles.navLinkActive : styles.navLink}>
+          Postventa
         </Link>
         <Link href="/users" className={`${styles.navLink} ${pathname === "/users" ? styles.navLinkActive : ""}`}>
           Usuarios
@@ -52,3 +57,4 @@ export default function Header() {
     </header>
   );
 }
+
