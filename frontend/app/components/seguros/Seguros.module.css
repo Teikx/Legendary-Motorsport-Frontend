@@ -846,3 +846,50 @@ select.input {
   from { transform: scale(0.92); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* TABS STYLING */
+.tabContainer {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 6px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tabBtn:hover {
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.activeTab {
+  color: var(--night) !important;
+  background: var(--accent) !important;
+  box-shadow: 0 4px 15px rgba(247, 198, 0, 0.2);
+}
+
+.tabBtn svg {
+  transition: transform 0.2s ease;
+}
+
+.tabBtn:hover svg {
+  transform: scale(1.1);
+}
+
