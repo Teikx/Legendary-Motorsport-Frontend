@@ -113,7 +113,8 @@ export default function Catalog() {
   useEffect(() => {
     void loadCatalog();
     void loadCart();
-  }, [loadCatalog, loadCart]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount — both functions have stable deps
 
   useEffect(() => {
     return () => {

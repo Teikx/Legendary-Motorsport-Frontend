@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import styles from "./Login.module.css";
 
 type Mode = "login" | "register";
@@ -29,6 +28,8 @@ const API_BASE_URL = "http://localhost:5035";
 
 export default function Login() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
   const [mode, setMode] = useState<Mode>("login");
   const [formState, setFormState] = useState<LoginFormState>(initialState);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +37,14 @@ export default function Login() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
+    // Use ref to avoid [router] as dep — router object can change reference
+    // between renders causing this effect to fire repeatedly and loop redirects
     const token = localStorage.getItem("authToken");
     if (token) {
-      router.push("/catalog");
+      routerRef.current.push("/catalog");
     }
-  }, [router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const canSubmit = useMemo(() => {
     if (mode === "login") {
@@ -114,6 +118,7 @@ export default function Login() {
           localStorage.setItem("idCliente", String(data.idCliente ?? ""));
           localStorage.setItem("email", data.email ?? "");
           localStorage.setItem("idRol", String(data.idRol ?? ""));
+          localStorage.setItem("nombre", data.nombre ?? data.name ?? "");
         }
 
         setIsSuccess(true);
