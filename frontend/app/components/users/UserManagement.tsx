@@ -65,48 +65,81 @@ interface ToastState {
   type: "success" | "error";
 }
 
+const API_BASE_URL = "http://localhost:5035";
+
+const mapBackendToUser = (c: any): User => ({
+  id: c.idCliente,
+  nombre: c.nombre || "",
+  apellido: c.apellido || "",
+  email: c.email || "",
+  telefono: c.telefono || "",
+  rol: c.idRol === 2 ? "Administrador" : "Cliente",
+  estado: "Activo",
+  fechaRegistro: c.fechaCreacion ? c.fechaCreacion.split("T")[0] : "",
+});
+
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("Todos");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Modal state
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Form State
-  const [formData, setFormData] = useState<Omit<User, "id" | "fechaRegistro">>({
+  const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
     email: "",
     telefono: "",
-    rol: "Cliente",
-    estado: "Activo",
+    rol: "Cliente" as User["rol"],
+    estado: "Activo" as User["estado"],
+    contrasena: "",
   });
   
   // Toast state
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  // Initialize users from LocalStorage or mock data
-  useEffect(() => {
-    const saved = localStorage.getItem("lm_mock_users");
-    if (saved) {
-      try {
-        setUsers(JSON.parse(saved));
-      } catch {
-        setUsers(DEFAULT_USERS);
-      }
-    } else {
-      setUsers(DEFAULT_USERS);
-      localStorage.setItem("lm_mock_users", JSON.stringify(DEFAULT_USERS));
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem("authToken");
+    const headers = new Headers(options.headers || {});
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
     }
-  }, []);
-
-  // Sync users to LocalStorage
-  const saveUsers = (newUsers: User[]) => {
-    setUsers(newUsers);
-    localStorage.setItem("lm_mock_users", JSON.stringify(newUsers));
+    headers.set("Content-Type", "application/json");
+    return fetch(url, {
+      ...options,
+      headers,
+    });
   };
+
+  const loadUsers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/clientes`);
+      if (response.status === 401 || response.status === 403) {
+        setError("No tienes permisos para administrar usuarios. Se requiere un rol de Administrador.");
+        return;
+      }
+      if (!response.ok) {
+        throw new Error("Error al obtener los usuarios del servidor.");
+      }
+      const data = await response.json().catch(() => []);
+      setUsers(Array.isArray(data) ? data.map(mapBackendToUser) : []);
+    } catch (err: any) {
+      setError(err.message || "No se pudo conectar con el servidor.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });
@@ -147,6 +180,7 @@ export default function UserManagement() {
       telefono: "",
       rol: "Cliente",
       estado: "Activo",
+      contrasena: "",
     });
     setModalMode("create");
   };
@@ -160,6 +194,7 @@ export default function UserManagement() {
       telefono: user.telefono,
       rol: user.rol,
       estado: user.estado,
+      contrasena: "",
     });
     setModalMode("edit");
   };
@@ -190,59 +225,93 @@ export default function UserManagement() {
     return true;
   };
 
-  const handleCreateUser = (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
+    if (!formData.contrasena.trim()) {
+      showToast("La contraseña es obligatoria para crear un usuario", "error");
+      return;
+    }
 
-    const newId = users.length > 0 ? Math.max(...users.map((u) => u.id)) + 1 : 1;
-    const today = new Date().toISOString().split("T")[0];
-    
-    const newUser: User = {
-      id: newId,
-      nombre: formData.nombre.trim(),
-      apellido: formData.apellido.trim(),
-      email: formData.email.trim(),
-      telefono: formData.telefono.trim(),
-      rol: formData.rol,
-      estado: formData.estado,
-      fechaRegistro: today,
-    };
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/clientes`, {
+        method: "POST",
+        body: JSON.stringify({
+          nombre: formData.nombre.trim(),
+          apellido: formData.apellido.trim(),
+          telefono: formData.telefono.trim(),
+          email: formData.email.trim(),
+          idRol: formData.rol === "Administrador" ? 2 : 1, // 2 = Admin, 1 = Usuario
+          contrasena: formData.contrasena.trim(),
+        }),
+      });
 
-    saveUsers([...users, newUser]);
-    showToast(`Usuario ${newUser.nombre} creado con éxito`);
-    handleCloseModal();
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al crear el usuario.");
+      }
+
+      showToast(`Usuario ${formData.nombre} creado con éxito`);
+      handleCloseModal();
+      loadUsers();
+    } catch (err: any) {
+      showToast(err.message || "Error al conectar con el servidor", "error");
+    }
   };
 
-  const handleEditUser = (e: React.FormEvent) => {
+  const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser || !validateForm()) return;
 
-    const updatedUsers = users.map((u) => {
-      if (u.id === selectedUser.id) {
-        return {
-          ...u,
-          nombre: formData.nombre.trim(),
-          apellido: formData.apellido.trim(),
-          email: formData.email.trim(),
-          telefono: formData.telefono.trim(),
-          rol: formData.rol,
-          estado: formData.estado,
-        };
+    try {
+      const payload: any = {
+        nombre: formData.nombre.trim(),
+        apellido: formData.apellido.trim(),
+        telefono: formData.telefono.trim(),
+        email: formData.email.trim(),
+        idRol: formData.rol === "Administrador" ? 2 : 1,
+      };
+      
+      if (formData.contrasena.trim()) {
+        payload.contrasena = formData.contrasena.trim();
       }
-      return u;
-    });
 
-    saveUsers(updatedUsers);
-    showToast("Usuario actualizado correctamente");
-    handleCloseModal();
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/clientes/${selectedUser.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al actualizar el usuario.");
+      }
+
+      showToast("Usuario actualizado correctamente");
+      handleCloseModal();
+      loadUsers();
+    } catch (err: any) {
+      showToast(err.message || "Error al conectar con el servidor", "error");
+    }
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!selectedUser) return;
-    const updatedUsers = users.filter((u) => u.id !== selectedUser.id);
-    saveUsers(updatedUsers);
-    showToast("Usuario eliminado correctamente");
-    handleCloseModal();
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/clientes/${selectedUser.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Error al eliminar el usuario.");
+      }
+
+      showToast("Usuario eliminado correctamente");
+      handleCloseModal();
+      loadUsers();
+    } catch (err: any) {
+      showToast(err.message || "Error al conectar con el servidor", "error");
+    }
   };
 
   return (
@@ -262,7 +331,7 @@ export default function UserManagement() {
             <h1 className={styles.title}>Gestión de Usuarios</h1>
             <p className={styles.subtitle}>
               Visualiza, crea, edita o elimina los usuarios de Legendary Motorsport.
-              Los datos se guardan de forma local en tu navegador.
+              Los datos están sincronizados en tiempo real con el servidor backend.
             </p>
           </div>
         </header>
@@ -332,7 +401,19 @@ export default function UserManagement() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyState}>
+                    Cargando usuarios desde el servidor...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={7} className={styles.emptyState} style={{ color: "#ef4444" }}>
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={styles.emptyState}>
                     No se encontraron usuarios con los filtros aplicados.
@@ -457,6 +538,20 @@ export default function UserManagement() {
                   placeholder="555-1234"
                   value={formData.telefono}
                   onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  Contraseña {modalMode === "create" ? "*" : "(Dejar en blanco para no cambiar)"}
+                </label>
+                <input
+                  type="password"
+                  required={modalMode === "create"}
+                  placeholder={modalMode === "create" ? "Contraseña segura" : "Dejar en blanco para no cambiar"}
+                  value={formData.contrasena}
+                  onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
                   className={styles.input}
                 />
               </div>
