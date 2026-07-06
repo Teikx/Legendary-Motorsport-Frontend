@@ -254,3 +254,189 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.specsTableContainer {
+  margin-top: 48px;
+  background: var(--night-2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.tableTitle {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .tableGrid {
+    grid-template-columns: 220px 1fr 1fr 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+}
+
+.rowHeader {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 12px 0;
+}
+
+.emptyCell {
+  color: rgba(255, 255, 255, 0.15);
+  font-style: italic;
+  font-size: 14px;
+  padding: 12px;
+  text-align: center;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.specCell {
+  position: relative;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease;
+}
+
+.winnerCell {
+  border-color: rgba(247, 198, 0, 0.3);
+  background: linear-gradient(135deg, rgba(247, 198, 0, 0.03), rgba(0, 0, 0, 0.3));
+}
+
+.specValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.winnerCell .specValue {
+  color: var(--accent);
+}
+
+.barContainer {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.barFill {
+  height: 100%;
+  background-color: var(--accent);
+  border-radius: 3px;
+}
+
+.winnerBadge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgba(247, 198, 0, 0.15);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.inventoryCell {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 16px;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.outOfStock {
+  color: #ef4444;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.inventoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.inventoryItemCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.invHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invColor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.pillNew {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pillUsed {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.invFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.invPrice {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.invStock {
+  color: var(--muted);
+}
+
