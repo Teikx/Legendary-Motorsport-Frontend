@@ -78,6 +78,44 @@ const VEHICLES_FOR_DRIVE: TestDriveVehicle[] = [
   },
 ];
 
+interface LocationOption {
+  id: string;
+  name: string;
+  address: string;
+  description: string;
+}
+
+const LOCATIONS: LocationOption[] = [
+  {
+    id: "rockford-hills",
+    name: "Rockford Hills Luxury",
+    address: "Portola Drive, Rockford Hills",
+    description: "Nuestra sucursal principal de lujo en Los Santos. Exclusiva para pruebas en ciudad y autopistas de alta gama.",
+  },
+  {
+    id: "pillbox-hill",
+    name: "Downtown Pillbox Hill",
+    address: "San Andreas Blvd, Pillbox Hill",
+    description: "Ubicación ideal para evaluar maniobrabilidad urbana y respuesta del motor en tráfico denso.",
+  },
+  {
+    id: "ls-airport",
+    name: "LS International Airport (Pista Privada)",
+    address: "Hangar 4, Los Santos International Airport",
+    description: "Nuestra pista de hangar privada y segura para exprimir la velocidad final de nuestros superdeportivos.",
+  },
+];
+
+const TIME_SLOTS = [
+  "09:00 AM",
+  "10:30 AM",
+  "12:00 PM",
+  "01:30 PM",
+  "03:00 PM",
+  "04:30 PM",
+  "06:00 PM",
+];
+
 export default function DrivePage() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedVehicle, setSelectedVehicle] = useState<TestDriveVehicle>(VEHICLES_FOR_DRIVE[0]);
@@ -88,6 +126,11 @@ export default function DrivePage() {
   const [telefono, setTelefono] = useState("");
   const [licencia, setLicencia] = useState("");
   
+  // Form states (Paso 3)
+  const [fecha, setFecha] = useState("");
+  const [hora, setHora] = useState("");
+  const [sucursal, setSucursal] = useState("");
+  
   // Validation errors
   const [error, setError] = useState<string | null>(null);
 
@@ -97,9 +140,11 @@ export default function DrivePage() {
     const storedEmail = localStorage.getItem("email")?.trim();
     const storedPhone = localStorage.getItem("telefono")?.trim();
     
-    if (storedName) setNombre(storedName);
-    if (storedEmail) setEmail(storedEmail);
-    if (storedPhone) setTelefono(storedPhone);
+    setTimeout(() => {
+      if (storedName) setNombre(storedName);
+      if (storedEmail) setEmail(storedEmail);
+      if (storedPhone) setTelefono(storedPhone);
+    }, 0);
   }, []);
 
   const validateStep2 = () => {
@@ -107,6 +152,17 @@ export default function DrivePage() {
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) return "Ingresa un correo electrónico válido.";
     if (!telefono.trim()) return "El teléfono de contacto es obligatorio.";
     if (!licencia.trim()) return "El número de licencia de conducir es obligatorio.";
+    return null;
+  };
+
+  const validateStep3 = () => {
+    if (!fecha) return "Debes seleccionar una fecha para la prueba.";
+    const selectedDate = new Date(fecha + "T00:00:00");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate < today) return "La fecha seleccionada no puede estar en el pasado.";
+    if (!hora) return "Debes seleccionar un horario disponible.";
+    if (!sucursal) return "Debes seleccionar una sucursal.";
     return null;
   };
 
@@ -120,6 +176,13 @@ export default function DrivePage() {
         setError(err);
       } else {
         setStep(3);
+      }
+    } else if (step === 3) {
+      const err = validateStep3();
+      if (err) {
+        setError(err);
+      } else {
+        setStep(4);
       }
     }
   };
@@ -283,11 +346,60 @@ export default function DrivePage() {
 
             {/* Paso 3: Programar Cita */}
             {step === 3 && (
-              <div className={styles.stepContentPlaceholder}>
+              <div className={styles.appointmentForm}>
                 <h3 className={styles.stepTitle}>Programar Cita</h3>
-                <p className={styles.placeholderText}>
-                  Aquí se presentará el selector de fecha, hora y ubicación (Próximo commit).
-                </p>
+                
+                <div className={styles.inputGroup}>
+                  <label className={styles.inputLabel} htmlFor="fecha">Fecha de la Prueba</label>
+                  <input
+                    type="date"
+                    id="fecha"
+                    value={fecha}
+                    onChange={(e) => setFecha(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className={styles.formInput}
+                  />
+                </div>
+
+                <div className={styles.timeSection}>
+                  <span className={styles.sectionLabel}>Horario Disponible</span>
+                  <div className={styles.timeGrid}>
+                    {TIME_SLOTS.map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`${styles.timeSlotButton} ${
+                          hora === slot ? styles.timeSlotActive : ""
+                        }`}
+                        onClick={() => setHora(slot)}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.locationSection}>
+                  <span className={styles.sectionLabel}>Selecciona una Sucursal</span>
+                  <div className={styles.locationGrid}>
+                    {LOCATIONS.map((loc) => (
+                      <button
+                        key={loc.id}
+                        type="button"
+                        className={`${styles.locationCard} ${
+                          sucursal === loc.id ? styles.locationCardActive : ""
+                        }`}
+                        onClick={() => setSucursal(loc.id)}
+                      >
+                        <div className={styles.locationHeader}>
+                          <span className={styles.locationName}>{loc.name}</span>
+                        </div>
+                        <span className={styles.locationAddress}>{loc.address}</span>
+                        <p className={styles.locationDescription}>{loc.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -324,7 +436,7 @@ export default function DrivePage() {
                 type="button"
                 className={styles.nextButton}
                 onClick={handleNextStep}
-                disabled={step > 2} // Limitado temporalmente al paso 2 en este commit
+                disabled={step > 3} // Limitado temporalmente al paso 3 en este commit
               >
                 Siguiente
               </button>
