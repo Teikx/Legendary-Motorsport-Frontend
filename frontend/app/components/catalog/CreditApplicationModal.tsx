@@ -45,10 +45,18 @@ export default function CreditApplicationModal({
 }: CreditApplicationModalProps) {
   const [formState, setFormState] = useState<CreditFormState>(initialFormState);
   const [errors, setErrors] = useState<Partial<Record<keyof CreditFormState, string>>>({});
+  const [requestStatus, setRequestStatus] = useState<'sent' | 'inProgress' | 'completed'>('sent');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset status when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setRequestStatus('sent');
+    }
+  }, [isOpen]);
 
   // Prefill email if available in localStorage
   useEffect(() => {
@@ -152,11 +160,15 @@ export default function CreditApplicationModal({
     if (!validate()) return;
 
     setIsSubmitting(true);
-    // Simulate API credit analysis loading
+    setRequestStatus('sent');
+    // Simulate sending request
+    setTimeout(() => setRequestStatus('inProgress'), 1500);
+    // Simulate analysis completion
     setTimeout(() => {
+      setRequestStatus('completed');
       setIsSubmitting(false);
       setSubmitSuccess(true);
-    }, 2000);
+    }, 3000);
   };
 
   return (
@@ -180,21 +192,36 @@ export default function CreditApplicationModal({
           <div className={styles.successScreen}>
             <h2 className={styles.title}>Solicitud de crédito</h2>
             <p className={styles.summary}>Tu solicitud ha sido enviada con éxito. A continuación se muestra el resumen de los datos ingresados:</p>
-            <ul className={styles.dataList}>
-              <li><strong>Nombre completo:</strong> {formState.fullName}</li>
-              <li><strong>Email:</strong> {formState.email}</li>
-              <li><strong>Teléfono:</strong> {formState.phone}</li>
-              <li><strong>Documento ID:</strong> {formState.dni}</li>
-              <li><strong>Ingresos mensuales:</strong> ${formState.monthlyIncome}</li>
-              <li><strong>Egresos mensuales:</strong> ${formState.monthlyExpenses}</li>
-              <li><strong>Antigüedad laboral:</strong> {formState.workSeniorityYears} años</li>
-              <li><strong>Historial crediticio:</strong> {formState.creditHistory}</li>
-              <li><strong>Pie / Enganche:</strong> ${formState.downPayment}</li>
-              <li><strong>Plazo:</strong> {formState.termMonths} meses</li>
-            </ul>
-            <button type="button" className={styles.actionButtonPrimary} onClick={handleClose}>
-              Cerrar
-            </button>
+            <div className={styles.summaryGrid}>
+              <div className={styles.summaryCard}><strong>Nombre completo</strong><span>{formState.fullName}</span></div>
+              <div className={styles.summaryCard}><strong>Email</strong><span>{formState.email}</span></div>
+              <div className={styles.summaryCard}><strong>Teléfono</strong><span>{formState.phone}</span></div>
+              <div className={styles.summaryCard}><strong>Documento ID</strong><span>{formState.dni}</span></div>
+              <div className={styles.summaryCard}><strong>Ingresos mensuales</strong><span>${formState.monthlyIncome}</span></div>
+              <div className={styles.summaryCard}><strong>Egresos mensuales</strong><span>${formState.monthlyExpenses}</span></div>
+              <div className={styles.summaryCard}><strong>Antigüedad laboral</strong><span>{formState.workSeniorityYears} años</span></div>
+              <div className={styles.summaryCard}><strong>Historial crediticio</strong><span>{formState.creditHistory}</span></div>
+              <div className={styles.summaryCard}><strong>Pie / Enganche</strong><span>${formState.downPayment}</span></div>
+              <div className={styles.summaryCard}><strong>Plazo</strong><span>{formState.termMonths} meses</span></div>
+            </div>
+            <div className={styles.progressSection}>
+              <p>Estado de la solicitud: <strong>Completado</strong></p>
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: '100%' }}></div>
+              </div>
+            </div>
+            <button type="button" className={styles.actionButtonPrimary} onClick={handleClose}>Cerrar</button>
+          </div>
+        ) : isSubmitting ? (
+          <div className={styles.successScreen}>
+            <h2 className={styles.title}>Procesando solicitud</h2>
+            <p className={styles.summary}>Tu solicitud está en progreso.</p>
+            <div className={styles.progressSection}>
+              <p>Estado de la solicitud: <strong>{requestStatus === 'sent' ? 'Enviado' : requestStatus === 'inProgress' ? 'En curso' : 'Completado'}</strong></p>
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: requestStatus === 'sent' ? '33%' : requestStatus === 'inProgress' ? '66%' : '100%' }}></div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className={styles.gridContainer}>
