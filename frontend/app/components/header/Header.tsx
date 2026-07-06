@@ -43,6 +43,9 @@ export default function Header() {
         <Link href="/postventa" className={pathname === "/postventa" ? styles.navLinkActive : styles.navLink}>
           Postventa
         </Link>
+        <Link href="/concesionarios" className={`${styles.navLink} ${pathname === "/concesionarios" ? styles.navLinkActive : ""}`}>
+          Concesionarios
+        </Link>
         <Link href="/users" className={`${styles.navLink} ${pathname === "/users" ? styles.navLinkActive : ""}`}>
           Usuarios
         </Link>
