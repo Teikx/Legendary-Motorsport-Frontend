@@ -63,6 +63,8 @@ export default function Catalog() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stockWarning, setStockWarning] = useState<string | null>(null);
+  const [toastTitle, setToastTitle] = useState("Sin stock disponible");
+  const [compareIds, setCompareIds] = useState<number[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -124,13 +126,27 @@ export default function Catalog() {
     };
   }, []);
 
-  const showStockWarning = (message: string) => {
+  const showStockWarning = useCallback((message: string, title = "Sin stock disponible") => {
     setStockWarning(message);
+    setToastTitle(title);
     if (warningTimer.current) clearTimeout(warningTimer.current);
     warningTimer.current = setTimeout(() => {
       setStockWarning(null);
     }, 4200);
-  };
+  }, []);
+
+  const handleToggleCompare = useCallback((id: number) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      }
+      if (prev.length >= 3) {
+        showStockWarning("Puedes comparar hasta 3 vehículos a la vez.", "Límite de comparación");
+        return prev;
+      }
+      return [...prev, id];
+    });
+  }, [showStockWarning]);
 
   const sortedVehicles = useMemo(() => {
     const list = [...vehicles];
@@ -284,7 +300,7 @@ export default function Catalog() {
           <div className={styles.stockToastInner}>
             <span className={styles.stockIcon}>!</span>
             <div>
-              <p className={styles.stockTitle}>Sin stock disponible</p>
+              <p className={styles.stockTitle}>{toastTitle}</p>
               <p className={styles.stockMessage}>{stockWarning}</p>
             </div>
             <button
@@ -348,6 +364,8 @@ export default function Catalog() {
                 key={vehicle.id}
                 vehicle={vehicle}
                 onOpenDetail={openVehicleDetail}
+                isCompared={compareIds.includes(vehicle.id)}
+                onToggleCompare={() => handleToggleCompare(vehicle.id)}
               />
             ))
           )}
@@ -363,6 +381,31 @@ export default function Catalog() {
             onRemoveItem={handleRemoveItem}
             onProceedToCheckout={handleProceedToCheckout}
           />
+        )}
+        {compareIds.length > 0 && (
+          <div className={styles.compareBar}>
+            <div className={styles.compareBarContent}>
+              <p className={styles.compareBarText}>
+                Vehículos seleccionados para comparar: <strong>{compareIds.length} / 3</strong>
+              </p>
+              <div className={styles.compareBarActions}>
+                <button
+                  type="button"
+                  onClick={() => setCompareIds([])}
+                  className={styles.compareClearBtn}
+                >
+                  Limpiar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/compare?ids=${compareIds.join(",")}`)}
+                  className={styles.compareSubmitBtn}
+                >
+                  Comparar ahora
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
