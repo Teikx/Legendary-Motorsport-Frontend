@@ -31,6 +31,9 @@ interface InsuredVehicle {
   color: string;
   fechaRegistro: string;
   estado: "Activo" | "Pendiente";
+  plan?: string;
+  prima?: number;
+  deducible?: number;
 }
 
 const API_BASE_URL = "http://localhost:5035";
@@ -39,7 +42,7 @@ export default function Seguros() {
   const router = useRouter();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"cliente" | "vehiculo">("cliente");
+  const [activeTab, setActiveTab] = useState<"cliente" | "vehiculo" | "cotizacion">("cliente");
 
   // State for Insured Client Form fields
   const [nombreCompleto, setNombreCompleto] = useState("");
@@ -58,6 +61,24 @@ export default function Seguros() {
   const [placa, setPlaca] = useState("");
   const [valorEstimado, setValorEstimado] = useState("");
   const [color, setColor] = useState("");
+
+  // Interactive plan states
+  const [selectedPlan, setSelectedPlan] = useState<"basico" | "gold" | "platinum">("gold");
+  const [deductible, setDeductible] = useState(20);
+
+  // Dynamic monthly premium calculation
+  const calculatedPremium = useMemo(() => {
+    const value = parseFloat(valorEstimado) || 0;
+    if (value === 0) return 0;
+
+    let rate = 0.012; // Gold (1.2% anual)
+    if (selectedPlan === "basico") rate = 0.006; // Bronze (0.6% anual)
+    if (selectedPlan === "platinum") rate = 0.028; // Platinum (2.8% anual)
+
+    const deductibleDiscount = 1 - ((deductible - 10) / 40) * 0.3;
+    const annualPremium = value * rate * deductibleDiscount;
+    return Math.max(15, Math.round(annualPremium / 12));
+  }, [valorEstimado, selectedPlan, deductible]);
 
   // UX & Flow State
   const [isLoading, setIsLoading] = useState(false);
@@ -303,6 +324,9 @@ export default function Seguros() {
         color: vehicleData.color,
         fechaRegistro: new Date().toLocaleDateString("es-ES"),
         estado: response.ok ? "Activo" : "Pendiente",
+        plan: selectedPlan,
+        prima: calculatedPremium,
+        deducible: deductible,
       };
 
       const updatedVehicles = [newVehicle, ...registeredVehicles];
@@ -329,6 +353,9 @@ export default function Seguros() {
         color: vehicleData.color,
         fechaRegistro: new Date().toLocaleDateString("es-ES"),
         estado: "Activo",
+        plan: selectedPlan,
+        prima: calculatedPremium,
+        deducible: deductible,
       };
 
       const updatedVehicles = [newVehicle, ...registeredVehicles];
@@ -415,18 +442,42 @@ export default function Seguros() {
             </svg>
             Datos del Vehículo
           </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "cotizacion" ? styles.activeTab : ""}`}
+            onClick={() => {
+              setActiveTab("cotizacion");
+              setShowHistory(false);
+            }}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Planes y Cotización
+          </button>
         </div>
 
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.kicker}>Seguros de Prestigio</p>
             <h1 className={styles.pageTitle}>
-              {activeTab === "cliente" ? "Registro del Cliente" : "Registro del Vehículo"}
+              {activeTab === "cliente" ? "Registro del Cliente" : activeTab === "vehiculo" ? "Registro del Vehículo" : "Planes y Cotización"}
             </h1>
             <p className={styles.pageSubtitle}>
               {activeTab === "cliente"
                 ? "Registra tus datos personales y de conductor para habilitar tu perfil de seguros en la plataforma."
-                : "Registra los datos del vehículo que deseas asegurar para cotizar y emitir tu póliza de cobertura."}
+                : activeTab === "vehiculo"
+                ? "Registra los datos del vehículo que deseas asegurar para continuar con la cotización."
+                : "Compara coberturas y ajusta tu deducible para emitir la póliza ideal para tu vehículo."}
             </p>
           </div>
           <div>
@@ -437,7 +488,9 @@ export default function Seguros() {
             >
               {activeTab === "cliente"
                 ? (showHistory ? "Ver Formulario de Registro" : `Clientes Registrados (${registeredClients.length})`)
-                : (showHistory ? "Ver Formulario de Registro" : `Vehículos Registrados (${registeredVehicles.length})`)}
+                : activeTab === "vehiculo"
+                ? (showHistory ? "Ver Formulario de Registro" : `Vehículos Registrados (${registeredVehicles.length})`)
+                : (showHistory ? "Ver Cotizador" : `Vehículos Registrados (${registeredVehicles.length})`)}
             </button>
           </div>
         </header>
@@ -563,6 +616,26 @@ export default function Seguros() {
                           <span>Valor Estimado:</span>
                           <span>${vehicle.valorEstimado.toLocaleString()} USD</span>
                         </div>
+                        {vehicle.plan && (
+                          <div className={styles.detailRow}>
+                            <span>Plan:</span>
+                            <strong style={{ color: vehicle.plan === 'basico' ? '#cd7f32' : vehicle.plan === 'gold' ? '#f7c600' : '#e5e9f0' }}>
+                              {vehicle.plan === 'basico' ? 'Bronze' : vehicle.plan === 'gold' ? 'Gold' : 'Platinum'}
+                            </strong>
+                          </div>
+                        )}
+                        {vehicle.deducible !== undefined && (
+                          <div className={styles.detailRow}>
+                            <span>Deducible:</span>
+                            <strong>{vehicle.deducible}%</strong>
+                          </div>
+                        )}
+                        {vehicle.prima !== undefined && (
+                          <div className={styles.detailRow}>
+                            <span>Prima Mensual:</span>
+                            <strong style={{ color: 'var(--accent)' }}>${vehicle.prima} USD</strong>
+                          </div>
+                        )}
                         <div className={styles.detailRow}>
                           <span>Fecha Registro:</span>
                           <span>{vehicle.fechaRegistro}</span>
@@ -826,12 +899,12 @@ export default function Seguros() {
               </div>
             </aside>
           </div>
-        ) : (
+        ) : activeTab === "vehiculo" ? (
           /* VEHICLE FORM & LIVE CARD PREVIEW SPLIT VIEW */
           <div className={styles.workspaceGrid}>
             
             {/* Vehicle Registration Form */}
-            <form onSubmit={handleVehicleSubmit} className={styles.formCard}>
+            <div className={styles.formCard}>
               <h2 className={styles.formSectionTitle}>Información del Vehículo</h2>
               
               <div className={styles.formRow}>
@@ -931,17 +1004,16 @@ export default function Seguros() {
                 </label>
               </div>
 
-              {error && <p className={styles.errorText}>{error}</p>}
-
               <button
-                type="submit"
-                disabled={!isVehicleFormValid || isLoading}
+                type="button"
+                disabled={!isVehicleFormValid}
                 className={styles.submitBtn}
-                style={{ marginTop: "16px" }}
+                style={{ marginTop: "24px" }}
+                onClick={() => setActiveTab("cotizacion")}
               >
-                {isLoading ? "Procesando Registro..." : "Registrar Vehículo Asegurado"}
+                Continuar a Cotización
               </button>
-            </form>
+            </div>
 
             {/* Live Vehicle Card Preview */}
             <aside className={styles.previewSection}>
@@ -1013,6 +1085,235 @@ export default function Seguros() {
                         <span className={styles.certValue} style={{ color: "var(--accent-2)" }}>
                           {valorEstimado ? `$${parseFloat(valorEstimado).toLocaleString()}` : "---"}
                         </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.certBadgeShield}>
+                  <svg
+                    width="44"
+                    height="44"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--accent)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <p>
+                    Cotización instantánea sujeta a verificación de siniestralidad. Coberturas válidas en todo el territorio de <strong>Legendary MotorSport</strong>.
+                  </p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        ) : (
+          /* PLAN SELECTION & COTIZACION WORKSPACE GRID */
+          <div className={styles.workspaceGrid}>
+            
+            {/* Coverage Plan Selection & Deductible Form */}
+            <form onSubmit={handleVehicleSubmit} className={styles.formCard}>
+              <h2 className={styles.formSectionTitle}>Planes de Cobertura</h2>
+              
+              <div className={styles.plansContainer}>
+                <button
+                  type="button"
+                  className={`${styles.planOptionCard} ${selectedPlan === "basico" ? styles.planOptionCardActive : ""}`}
+                  style={{ border: selectedPlan === "basico" ? "1.5px solid var(--accent)" : "1px solid rgba(255, 255, 255, 0.08)", minHeight: "105px" }}
+                  onClick={() => setSelectedPlan("basico")}
+                >
+                  <div className={styles.planHeaderRow}>
+                    <span className={styles.planName} style={{ color: "#cd7f32" }}>Bronze</span>
+                    <div className={styles.planBullet} style={{ borderColor: "#cd7f32", backgroundColor: selectedPlan === "basico" ? "#cd7f32" : "transparent" }} />
+                  </div>
+                  <span className={styles.planCostDescription}>Básico - 0.6% valor/año</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.planOptionCard} ${selectedPlan === "gold" ? styles.planOptionCardActive : ""}`}
+                  style={{ border: selectedPlan === "gold" ? "1.5px solid var(--accent)" : "1px solid rgba(255, 255, 255, 0.08)", minHeight: "105px" }}
+                  onClick={() => setSelectedPlan("gold")}
+                >
+                  <div className={styles.planHeaderRow}>
+                    <span className={styles.planName} style={{ color: "#f7c600" }}>Gold</span>
+                    <div className={styles.planBullet} style={{ borderColor: "#f7c600", backgroundColor: selectedPlan === "gold" ? "#f7c600" : "transparent" }} />
+                  </div>
+                  <span className={styles.planCostDescription}>Ejecutivo - 1.2% valor/año</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.planOptionCard} ${selectedPlan === "platinum" ? styles.planOptionCardActive : ""}`}
+                  style={{ border: selectedPlan === "platinum" ? "1.5px solid var(--accent)" : "1px solid rgba(255, 255, 255, 0.08)", minHeight: "105px" }}
+                  onClick={() => setSelectedPlan("platinum")}
+                >
+                  <div className={styles.planHeaderRow}>
+                    <span className={styles.planName} style={{ color: "#e5e9f0" }}>Platinum</span>
+                    <div className={styles.planBullet} style={{ borderColor: "#e5e9f0", backgroundColor: selectedPlan === "platinum" ? "#e5e9f0" : "transparent" }} />
+                  </div>
+                  <span className={styles.planCostDescription}>Legendario - 2.8% valor/año</span>
+                </button>
+              </div>
+
+              {/* Deductible Slider */}
+              <div className={styles.field} style={{ marginTop: "24px", marginBottom: "24px" }}>
+                <div className={styles.sliderLabelRow}>
+                  <span>Deducible de Póliza</span>
+                  <span className={styles.sliderValue} style={{ color: "var(--accent)" }}>{deductible}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="50"
+                  step="5"
+                  value={deductible}
+                  onChange={(e) => setDeductible(parseInt(e.target.value))}
+                  className={styles.rangeInput}
+                />
+                <div className={styles.sliderLimits}>
+                  <span>10% (Mayor Prima)</span>
+                  <span>50% (Menor Prima)</span>
+                </div>
+              </div>
+
+              {error && <p className={styles.errorText}>{error}</p>}
+
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                <button
+                  type="button"
+                  className={styles.submitBtn}
+                  style={{ background: "rgba(255, 255, 255, 0.05)", color: "#fff", border: "1px solid rgba(255, 255, 255, 0.1)" }}
+                  onClick={() => setActiveTab("vehiculo")}
+                >
+                  Atrás
+                </button>
+                <button
+                  type="submit"
+                  disabled={!isVehicleFormValid || isLoading}
+                  className={styles.submitBtn}
+                >
+                  {isLoading ? "Procesando Registro..." : "Registrar Vehículo Asegurado"}
+                </button>
+              </div>
+            </form>
+
+            {/* Live Vehicle Card Preview with Quote info */}
+            <aside className={styles.previewSection}>
+              <div className={styles.stickyWrapper}>
+                <h3 className={styles.previewTitle}>Ficha del Vehículo</h3>
+
+                <div className={styles.quoteCertificate}>
+                  <div className={styles.certHeader}>
+                    <span className={styles.certSubtitle}>Póliza de Cobertura Vehicular</span>
+                    <h4 className={styles.certTitle}>Legendary Motorsport</h4>
+                  </div>
+
+                  <div className={styles.certBody}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
+                      <div
+                        style={{
+                          width: "80px",
+                          height: "80px",
+                          borderRadius: "50%",
+                          background: "rgba(255, 255, 255, 0.04)",
+                          border: "1px solid rgba(247, 198, 0, 0.4)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <svg
+                          width="40"
+                          height="40"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="var(--accent)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+                          <circle cx="7" cy="17" r="2" />
+                          <circle cx="17" cy="17" r="2" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    <div className={styles.certGrid}>
+                      <div className={styles.certItem} style={{ gridColumn: "span 2" }}>
+                        <span className={styles.certLabel}>Vehículo Asegurado</span>
+                        <span className={styles.certValue} style={{ fontSize: "15px", fontWeight: "700", color: "#fff" }}>
+                          {marca} {modelo || "---"}
+                        </span>
+                      </div>
+                      
+                      <div className={styles.certItem}>
+                        <span className={styles.certLabel}>Placa</span>
+                        <span className={styles.certValue}>{placa.toUpperCase() || "---"}</span>
+                      </div>
+
+                      <div className={styles.certItem}>
+                        <span className={styles.certLabel}>Año</span>
+                        <span className={styles.certValue}>{anio || "---"}</span>
+                      </div>
+
+                      <div className={styles.certItem}>
+                        <span className={styles.certLabel}>Color</span>
+                        <span className={styles.certValue}>{color || "---"}</span>
+                      </div>
+
+                      <div className={styles.certItem}>
+                        <span className={styles.certLabel}>Valor Estimado</span>
+                        <span className={styles.certValue} style={{ color: "var(--accent-2)" }}>
+                          {valorEstimado ? `$${parseFloat(valorEstimado).toLocaleString()}` : "---"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.divider} />
+
+                    <div className={styles.planSummary}>
+                      <span className={styles.planTitleText} style={{ color: selectedPlan === 'basico' ? '#cd7f32' : selectedPlan === 'gold' ? '#f7c600' : '#e5e9f0' }}>
+                        Plan {selectedPlan === 'basico' ? 'Bronze' : selectedPlan === 'gold' ? 'Gold' : 'Platinum'}
+                      </span>
+                      <ul className={styles.featureList}>
+                        {selectedPlan === 'basico' && (
+                          <>
+                            <li>Daños por accidentes menores</li>
+                            <li>Responsabilidad civil básica</li>
+                            <li>Deducible del {deductible}%</li>
+                          </>
+                        )}
+                        {selectedPlan === 'gold' && (
+                          <>
+                            <li>Robo total y parcial</li>
+                            <li>Choques y siniestros en Los Santos</li>
+                            <li>Asistencia de grúa básica</li>
+                            <li>Deducible del {deductible}%</li>
+                          </>
+                        )}
+                        {selectedPlan === 'platinum' && (
+                          <>
+                            <li>Destrucción total y explosiones</li>
+                            <li>Reparación en talleres oficiales LSM</li>
+                            <li>Auxilio mecánico VIP 24/7</li>
+                            <li>Vehículo de reemplazo premium</li>
+                            <li>Deducible del {deductible}%</li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className={styles.costBlock}>
+                      <span className={styles.costLabelText}>Prima Mensual Est.</span>
+                      <div className={styles.priceContainer}>
+                        <span className={styles.currencySymbol}>$</span>
+                        <span className={styles.priceAmount}>{calculatedPremium}</span>
+                        <span className={styles.billingPeriod}>/mes</span>
                       </div>
                     </div>
                   </div>
@@ -1146,6 +1447,20 @@ export default function Seguros() {
                 <span>Placa / Matrícula:</span>
                 <strong>{successVehicle.placa}</strong>
               </div>
+              {successVehicle.plan && (
+                <div className={styles.modalDetailRow}>
+                  <span>Plan de Seguro:</span>
+                  <strong className={styles.goldText}>
+                    {successVehicle.plan === 'basico' ? 'Bronze' : successVehicle.plan === 'gold' ? 'Gold' : 'Platinum'} ({successVehicle.deducible}% Deducible)
+                  </strong>
+                </div>
+              )}
+              {successVehicle.prima !== undefined && (
+                <div className={styles.modalDetailRow}>
+                  <span>Prima Mensual:</span>
+                  <strong className={styles.goldText}>${successVehicle.prima} USD</strong>
+                </div>
+              )}
             </div>
 
             <div className={styles.modalActions}>
