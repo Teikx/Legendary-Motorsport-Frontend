@@ -10,6 +10,12 @@ interface VinHistoryEntry {
   timestamp: string;
 }
 
+interface ChatMessage {
+  sender: "user" | "system" | "benny" | "simeon";
+  text: string;
+  timestamp: string;
+}
+
 const VEHICLES = [
   "Pegassi Osiris",
   "Grotti Turismo R",
@@ -86,6 +92,21 @@ export default function Postventa() {
     email: "",
     telefono: "",
   });
+
+  // FAQ Category Filter States
+  const [faqCategory, setFaqCategory] = useState<"all" | "warranty" | "tuning" | "safety">("all");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Live Chat Simulator States
+  const [chatInput, setChatInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      sender: "system",
+      text: "Hola. Bienvenido al canal de soporte oficial de Legendary Motorsport. ¿En qué podemos ayudarte hoy?",
+      timestamp: "12:00 PM",
+    },
+  ]);
 
   // Section Refs for Smooth Scrolling
   const vinRef = useRef<HTMLDivElement>(null);
@@ -164,16 +185,14 @@ export default function Postventa() {
 
   const handleDateChange = (dateVal: string) => {
     setFormData((prev) => ({ ...prev, fecha: dateVal }));
-    // Shuffle slots slightly to simulate database queries on different dates
     const shuffled = BASE_TIME_SLOTS.map((slot) => {
-      // Keep at least some available, customize based on weekday vs weekend
       const isWeekend = new Date(dateVal).getDay() % 6 === 0;
       if (isWeekend && (slot.time.includes("03:00") || slot.time.includes("04:30"))) {
-        return { ...slot, available: false }; // Closed late on weekends
+        return { ...slot, available: false };
       }
       return {
         ...slot,
-        available: Math.random() > 0.4, // Randomize availability
+        available: Math.random() > 0.4,
       };
     });
     setAvailableSlots(shuffled);
@@ -186,7 +205,6 @@ export default function Postventa() {
       return;
     }
 
-    // Generate random booking ID
     const rand = Math.floor(1000 + Math.random() * 9000);
     setBookingCode(`LMS-BK-${rand}`);
     setBookingSubmitted(true);
@@ -208,6 +226,56 @@ export default function Postventa() {
 
   const scrollToSection = (elementRef: React.RefObject<HTMLDivElement | null>) => {
     elementRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSendMessage = (e: FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMsg = chatInput.trim();
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setChatMessages((prev) => [...prev, { sender: "user", text: userMsg, timestamp }]);
+    setChatInput("");
+    setIsTyping(true);
+
+    setTimeout(() => {
+      let reply = "";
+      let sender: "benny" | "simeon" | "system" = "system";
+
+      const lower = userMsg.toLowerCase();
+      if (
+        lower.includes("benny") ||
+        lower.includes("taller") ||
+        lower.includes("personalizar") ||
+        lower.includes("pintura") ||
+        lower.includes("color") ||
+        lower.includes("llanta") ||
+        lower.includes("tuning") ||
+        lower.includes("motor") ||
+        lower.includes("turbo")
+      ) {
+        sender = "benny";
+        reply = "¡Qué tal hermano! Hablas con Benny. En el taller de Strawberry nos especializamos en dejar las naves flotando. Si quieres pinturas camaleónicas o rines cromados custom, agenda tu cita y yo mismo me encargo de mimar esa nave. ¡Nos vemos!";
+      } else if (
+        lower.includes("simeon") ||
+        lower.includes("precio") ||
+        lower.includes("dinero") ||
+        lower.includes("garantia") ||
+        lower.includes("pagar") ||
+        lower.includes("comprar") ||
+        lower.includes("mors") ||
+        lower.includes("seguro")
+      ) {
+        sender = "simeon";
+        reply = "¿Amigo mío? ¡Hablas con Simeon Yetarian! Has tomado una excelente decisión al confiar en mí. La garantía Legend Shield es fantástica para el negocio... digo, para tu seguridad. Asegúrate de pagar tu prima a tiempo y tu hipercoche será eterno.";
+      } else {
+        reply = "Gracias por su consulta. Si su duda está relacionada con campañas de seguridad o recalls, por favor utilice el verificador de VIN arriba. Para agendar mantenimiento, use el formulario de reserva prioritaria.";
+      }
+
+      setChatMessages((prev) => [...prev, { sender, text: reply, timestamp }]);
+      setIsTyping(false);
+    }, 1500);
   };
 
   // Simulating performance statistics calculation for Card 0 (Puesta a punto)
@@ -272,6 +340,63 @@ export default function Postventa() {
   const currentArmor = getArmorStats();
   const currentUpgrades = getUpgradeStats();
   const currentWarranty = getWarrantyInfo();
+
+  // FAQ list with categories
+  const FAQ_ITEMS = [
+    {
+      category: "tuning",
+      question: "¿Cada cuánto debo realizar el mantenimiento preventivo de mi hipercoche?",
+      answer: (
+        <>
+          Recomendamos ingresar tu vehículo a taller cada 5,000 km o después de escapar de persecuciones policiales intensas de 5 estrellas. El desgaste de neumáticos de alta velocidad y turbocompresores debe ser monitoreado. Puedes{" "}
+          <button
+            type="button"
+            onClick={() => scrollToSection(bookingRef)}
+            className={styles.faqLink}
+          >
+            agendar tu cita en taller ahora mismo
+          </button>.
+        </>
+      ),
+    },
+    {
+      category: "warranty",
+      question: "¿Qué es la cobertura de garantía 'Legend Shield' y qué incluye?",
+      answer: (
+        <>
+          Es nuestra garantía premium exclusiva de fábrica que cubre el 100% de desperfectos mecánicos, calibración de transmisiones de doble embrague, fallos de inyección de nitroso y reparaciones de fibra de carbono. Nota: No cubre daños provocados por colisiones contra trenes de carga ni explosiones directas por RPG.
+        </>
+      ),
+    },
+    {
+      category: "safety",
+      question: "¿Las campañas de recall de airbag y blindaje tienen algún coste?",
+      answer: (
+        <>
+          No. Todas las campañas de recall oficiales y mejoras de seguridad son financiadas íntegramente por Legendary Motorsport y se realizan de manera gratuita en cualquiera de nuestros talleres autorizados. Te recomendamos{" "}
+          <button
+            type="button"
+            onClick={() => scrollToSection(vinRef)}
+            className={styles.faqLink}
+          >
+            verificar el VIN de tu chasis
+          </button>{" "}
+          para descartar campañas pendientes.
+        </>
+      ),
+    },
+    {
+      category: "tuning",
+      question: "¿Puedo personalizar la pintura de mi auto durante un servicio de planchado y pintura?",
+      answer: (
+        <>
+          Por supuesto. Disponemos de la gama de pinturas premium más avanzada del mercado, incluyendo acabados nacarados, mate, camaleónicos exclusivos y cromados de alta reflectividad. Puedes programarlo seleccionando la opción respectiva en el formulario de citas.
+        </>
+      ),
+    },
+  ];
+
+  const filteredFaqs = FAQ_ITEMS.filter((item) => faqCategory === "all" || item.category === faqCategory);
 
   return (
     <div className={styles.container}>
@@ -907,6 +1032,171 @@ export default function Postventa() {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Accordion FAQ Section with Category Filter Tabs */}
+      <section className={styles.faqSection}>
+        <div className={styles.sectionTitleBlock}>
+          <h2 className={styles.sectionTitle}>Preguntas Frecuentes</h2>
+          <p className={styles.sectionSubtitle}>Filtra por categoría y resuelve tus dudas sobre el servicio oficial.</p>
+        </div>
+
+        {/* Category tabs */}
+        <div className={styles.faqTabs}>
+          <button
+            type="button"
+            className={`${styles.faqTab} ${faqCategory === "all" ? styles.faqTabActive : ""}`}
+            onClick={() => { setFaqCategory("all"); setOpenFaq(null); }}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            className={`${styles.faqTab} ${faqCategory === "warranty" ? styles.faqTabActive : ""}`}
+            onClick={() => { setFaqCategory("warranty"); setOpenFaq(null); }}
+          >
+            Garantía y Seguros
+          </button>
+          <button
+            type="button"
+            className={`${styles.faqTab} ${faqCategory === "tuning" ? styles.faqTabActive : ""}`}
+            onClick={() => { setFaqCategory("tuning"); setOpenFaq(null); }}
+          >
+            Mantenimiento y Tuning
+          </button>
+          <button
+            type="button"
+            className={`${styles.faqTab} ${faqCategory === "safety" ? styles.faqTabActive : ""}`}
+            onClick={() => { setFaqCategory("safety"); setOpenFaq(null); }}
+          >
+            Campañas y Recall
+          </button>
+        </div>
+
+        <div className={styles.accordion}>
+          {filteredFaqs.map((item, idx) => {
+            const isActive = openFaq === idx;
+            return (
+              <div
+                key={idx}
+                className={`${styles.accordionItem} ${isActive ? styles.accordionItemActive : ""}`}
+              >
+                <button
+                  type="button"
+                  className={styles.accordionHeader}
+                  onClick={() => setOpenFaq(isActive ? null : idx)}
+                >
+                  <span>{item.question}</span>
+                  <span className={`${styles.arrow} ${isActive ? styles.arrowRotated : ""}`}>
+                    ▼
+                  </span>
+                </button>
+                <div
+                  className={`${styles.accordionContent} ${
+                    isActive ? styles.accordionContentActive : ""
+                  }`}
+                >
+                  <div className={styles.accordionText}>{item.answer}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Support Contact Info & Live Chat Simulator */}
+      <section className={styles.contactSection}>
+        <div className={styles.sectionTitleBlock}>
+          <h2 className={styles.sectionTitle}>Atención al Cliente Postventa</h2>
+          <p className={styles.sectionSubtitle}>¿Tienes preguntas adicionales? Consúltanos directamente o chatea con soporte.</p>
+        </div>
+
+        <div className={styles.contactLayout}>
+          {/* Left: Contact Info Cards */}
+          <div className={styles.contactInfo}>
+            <div className={styles.contactCard}>
+              <div className={styles.contactIcon}>📞</div>
+              <div className={styles.contactLabel}>Línea Directa</div>
+              <div className={styles.contactValue}>555-0100 (WhatsApp)</div>
+            </div>
+            <div className={styles.contactCard}>
+              <div className={styles.contactIcon}>✉️</div>
+              <div className={styles.contactLabel}>Soporte Oficial</div>
+              <div className={styles.contactValue}>
+                <a href="mailto:soporte@legendarymotorsport.com" className={styles.contactLink}>
+                  soporte@legendarymotorsport.com
+                </a>
+              </div>
+            </div>
+            <div className={styles.contactCard}>
+              <div className={styles.contactIcon}>🗺️</div>
+              <div className={styles.contactLabel}>Oficina Central</div>
+              <div className={styles.contactValue}>Rockford Hills, Los Santos</div>
+            </div>
+          </div>
+
+          {/* Right: Live Chat Widget Simulator */}
+          <div className={styles.chatWidget}>
+            <div className={styles.chatHeader}>
+              <div className={styles.chatHeaderInfo}>
+                <span className={styles.chatDot}></span>
+                <span className={styles.chatTitle}>Asistente de Soporte Legendary</span>
+              </div>
+              <span className={styles.chatStatus}>Canal Seguro</span>
+            </div>
+
+            <div className={styles.chatBody}>
+              {chatMessages.map((msg, index) => {
+                let senderName = "Soporte";
+                let senderClass = styles.chatMsgSystem;
+
+                if (msg.sender === "user") {
+                  senderName = "Tú";
+                  senderClass = styles.chatMsgUser;
+                } else if (msg.sender === "benny") {
+                  senderName = "Benny (Original Motor Works)";
+                  senderClass = styles.chatMsgBenny;
+                } else if (msg.sender === "simeon") {
+                  senderName = "Simeon Yetarian (Premium Deluxe)";
+                  senderClass = styles.chatMsgSimeon;
+                }
+
+                return (
+                  <div key={index} className={`${styles.chatMessage} ${senderClass}`}>
+                    <div className={styles.chatMsgHeader}>
+                      <span className={styles.chatMsgSender}>{senderName}</span>
+                      <span className={styles.chatMsgTime}>{msg.timestamp}</span>
+                    </div>
+                    <p className={styles.chatMsgText}>{msg.text}</p>
+                  </div>
+                );
+              })}
+
+              {isTyping && (
+                <div className={`${styles.chatMessage} ${styles.chatMsgSystem}`}>
+                  <div className={styles.typingIndicator}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSendMessage} className={styles.chatForm}>
+              <input
+                type="text"
+                placeholder="Escribe una pregunta (ej. 'Benny', 'Garantía', 'Taller')..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                className={styles.chatInput}
+              />
+              <button type="submit" className={styles.btnChatSend}>
+                Enviar
+              </button>
+            </form>
+          </div>
         </div>
       </section>
     </div>
