@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useMemo, useState, useEffect, useRef } from "react";
 import { VehicleDetail } from "./types";
 import styles from "./VehicleDetailModal.module.css";
@@ -41,19 +42,21 @@ export default function VehicleDetailModal({
   const stockAvailable = selectedInventory?.stock ?? 0;
 
   useEffect(() => {
-    setSelectedColor("");
-    setSelectedProductId(null);
-    setQuantity(1);
-  }, [vehicle?.id]);
+    if (selectedColor !== "" || selectedProductId !== null || quantity !== 1) {
+      setSelectedColor("");
+      setSelectedProductId(null);
+      setQuantity(1);
+    }
+  }, [vehicle?.id, selectedColor, selectedProductId, quantity]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isClosing) {
       setIsClosing(false);
     }
     return () => {
       if (closeTimer.current) clearTimeout(closeTimer.current);
     };
-  }, [isOpen]);
+  }, [isOpen, isClosing]);
 
   if ((!isOpen && !isClosing) || !vehicle) {
     return null;

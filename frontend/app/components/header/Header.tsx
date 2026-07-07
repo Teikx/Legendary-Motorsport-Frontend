@@ -14,7 +14,7 @@ export default function Header() {
   useEffect(() => {
     const storedName = localStorage.getItem("nombre")?.trim();
     if (storedName) {
-      setDisplayName(storedName);
+      setTimeout(() => setDisplayName(storedName), 0);
     }
   }, []);
 

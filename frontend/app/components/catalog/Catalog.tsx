@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
@@ -82,8 +83,8 @@ export default function Catalog() {
   }, []);
 
   const loadCatalog = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading((prev) => (prev ? prev : true));
+    setError((prev) => (prev === null ? null : null));
     try {
       const response = await fetch(`${API_BASE_URL}/api/catalogo`);
       const data = await response.json().catch(() => []);

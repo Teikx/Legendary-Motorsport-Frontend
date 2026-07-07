@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import styles from "./DrivePage.module.css";
 import Header from "../header/Header";
 
@@ -117,7 +118,7 @@ const TIME_SLOTS = [
 ];
 
 export default function DrivePage() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [selectedVehicle, setSelectedVehicle] = useState<TestDriveVehicle>(VEHICLES_FOR_DRIVE[0]);
 
   // Form states (Paso 2)
@@ -130,6 +131,10 @@ export default function DrivePage() {
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [sucursal, setSucursal] = useState("");
+
+  // Step 4 state
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [ticketCode, setTicketCode] = useState("");
   
   // Validation errors
   const [error, setError] = useState<string | null>(null);
@@ -184,14 +189,34 @@ export default function DrivePage() {
       } else {
         setStep(4);
       }
+    } else if (step === 4) {
+      if (!acceptTerms) {
+        setError("Debes aceptar los términos y condiciones de la prueba de manejo.");
+        return;
+      }
+      const code = "LM-" + Math.floor(100000 + Math.random() * 900000);
+      setTicketCode(code);
+      setStep(5);
     }
   };
 
   const handlePrevStep = () => {
     setError(null);
     if (step > 1) {
-      setStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+      setStep((prev) => (prev - 1) as 1 | 2 | 3 | 4 | 5);
     }
+  };
+
+  const handleReset = () => {
+    setStep(1);
+    setSelectedVehicle(VEHICLES_FOR_DRIVE[0]);
+    setLicencia("");
+    setFecha("");
+    setHora("");
+    setSucursal("");
+    setAcceptTerms(false);
+    setTicketCode("");
+    setError(null);
   };
 
   return (
@@ -234,33 +259,38 @@ export default function DrivePage() {
         {/* Panel derecho: Configuración y pasos */}
         <section className={styles.formPanel}>
           <div className={styles.formCard}>
-            <header className={styles.formHeader}>
-              <h1 className={styles.title}>Prueba de Manejo</h1>
-              <p className={styles.subtitle}>Experimenta el verdadero rendimiento en carretera</p>
-            </header>
+            {/* Cabecera del formulario */}
+            {step < 5 && (
+              <header className={styles.formHeader}>
+                <h1 className={styles.title}>Prueba de Manejo</h1>
+                <p className={styles.subtitle}>Experimenta el verdadero rendimiento en carretera</p>
+              </header>
+            )}
 
             {/* Indicador de pasos */}
-            <div className={styles.stepIndicator}>
-              <div className={`${styles.stepNode} ${step >= 1 ? styles.stepActive : ""}`}>
-                <span className={styles.stepNumber}>1</span>
-                <span className={styles.stepLabelText}>Vehículo</span>
+            {step < 5 && (
+              <div className={styles.stepIndicator}>
+                <div className={`${styles.stepNode} ${step >= 1 ? styles.stepActive : ""}`}>
+                  <span className={styles.stepNumber}>1</span>
+                  <span className={styles.stepLabelText}>Vehículo</span>
+                </div>
+                <div className={styles.stepLine} />
+                <div className={`${styles.stepNode} ${step >= 2 ? styles.stepActive : ""}`}>
+                  <span className={styles.stepNumber}>2</span>
+                  <span className={styles.stepLabelText}>Datos</span>
+                </div>
+                <div className={styles.stepLine} />
+                <div className={`${styles.stepNode} ${step >= 3 ? styles.stepActive : ""}`}>
+                  <span className={styles.stepNumber}>3</span>
+                  <span className={styles.stepLabelText}>Cita</span>
+                </div>
+                <div className={styles.stepLine} />
+                <div className={`${styles.stepNode} ${step >= 4 ? styles.stepActive : ""}`}>
+                  <span className={styles.stepNumber}>4</span>
+                  <span className={styles.stepLabelText}>Confirmación</span>
+                </div>
               </div>
-              <div className={styles.stepLine} />
-              <div className={`${styles.stepNode} ${step >= 2 ? styles.stepActive : ""}`}>
-                <span className={styles.stepNumber}>2</span>
-                <span className={styles.stepLabelText}>Datos</span>
-              </div>
-              <div className={styles.stepLine} />
-              <div className={`${styles.stepNode} ${step >= 3 ? styles.stepActive : ""}`}>
-                <span className={styles.stepNumber}>3</span>
-                <span className={styles.stepLabelText}>Cita</span>
-              </div>
-              <div className={styles.stepLine} />
-              <div className={`${styles.stepNode} ${step >= 4 ? styles.stepActive : ""}`}>
-                <span className={styles.stepNumber}>4</span>
-                <span className={styles.stepLabelText}>Confirmación</span>
-              </div>
-            </div>
+            )}
 
             {/* Paso 1: Selección de Vehículo */}
             {step === 1 && (
@@ -404,14 +434,176 @@ export default function DrivePage() {
             )}
 
             {/* Paso 4: Confirmación */}
-            {step === 4 && (
-              <div className={styles.stepContentPlaceholder}>
-                <h3 className={styles.stepTitle}>Confirmación</h3>
-                <p className={styles.placeholderText}>
-                  Aquí se presentará el resumen y la confirmación final (Próximo commit).
-                </p>
-              </div>
-            )}
+            {step === 4 && (() => {
+              const selectedLocation = LOCATIONS.find((loc) => loc.id === sucursal);
+              return (
+                <div className={styles.summaryContainer}>
+                  <h3 className={styles.stepTitle}>Resumen de tu Reserva</h3>
+                  
+                  {/* Vehículo */}
+                  <div className={styles.summarySection}>
+                    <h4 className={styles.summarySubtitle}>Vehículo de Prueba</h4>
+                    <div className={styles.summaryVehicleDetails}>
+                      <p className={styles.summaryText}>
+                        <strong>Modelo:</strong> {selectedVehicle.brand} {selectedVehicle.model}
+                      </p>
+                      <p className={styles.summaryText}>
+                        <strong>Categoría:</strong> {selectedVehicle.class}
+                      </p>
+                      <p className={styles.summaryText}>
+                        <strong>Prestaciones:</strong> Velocidad máxima de {selectedVehicle.topSpeed} (0-100 en {selectedVehicle.acceleration})
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Conductor */}
+                  <div className={styles.summarySection}>
+                    <h4 className={styles.summarySubtitle}>Datos del Conductor</h4>
+                    <div className={styles.summaryGrid}>
+                      <p className={styles.summaryText}>
+                        <strong>Nombre:</strong> {nombre}
+                      </p>
+                      <p className={styles.summaryText}>
+                        <strong>Licencia:</strong> {licencia}
+                      </p>
+                      <p className={styles.summaryText}>
+                        <strong>Teléfono:</strong> {telefono}
+                      </p>
+                      <p className={styles.summaryText}>
+                        <strong>Email:</strong> {email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cita */}
+                  <div className={styles.summarySection}>
+                    <h4 className={styles.summarySubtitle}>Fecha y Ubicación</h4>
+                    <div className={styles.summaryGrid}>
+                      <p className={styles.summaryText}>
+                        <strong>Fecha:</strong> {fecha}
+                      </p>
+                      <p className={styles.summaryText}>
+                        <strong>Horario:</strong> {hora}
+                      </p>
+                      <p className={styles.summaryText} style={{ gridColumn: "span 2" }}>
+                        <strong>Sucursal:</strong> {selectedLocation?.name}
+                      </p>
+                      <p className={styles.summaryText} style={{ gridColumn: "span 2" }}>
+                        <strong>Dirección:</strong> {selectedLocation?.address}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Términos y condiciones */}
+                  <div className={styles.termsContainer}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={acceptTerms}
+                        onChange={(e) => setAcceptTerms(e.target.checked)}
+                        className={styles.checkboxInput}
+                      />
+                      <span className={styles.checkboxText}>
+                        Acepto que poseo una licencia de conducir vigente y asumo la responsabilidad por cualquier daño material causado durante la prueba debido a conducción temeraria.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Paso 5: Éxito */}
+            {step === 5 && (() => {
+              const selectedLocation = LOCATIONS.find((loc) => loc.id === sucursal);
+              return (
+                <div className={styles.successPanel}>
+                  <header className={styles.successHeader}>
+                    <div className={styles.successIconWrapper}>
+                      <svg
+                        className={styles.successIcon}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    <h2 className={styles.successTitle}>¡Cita Confirmada!</h2>
+                    <p className={styles.successSubtitle}>
+                      Tu prueba de manejo ha sido programada con éxito en Legendary Motorsport.
+                    </p>
+                  </header>
+
+                  <div className={styles.ticketCard}>
+                    <div className={styles.ticketHeader}>
+                      <span className={styles.ticketLabel}>COMPROBANTE DE RESERVA</span>
+                      <span className={styles.ticketCode}>{ticketCode}</span>
+                    </div>
+                    <div className={styles.ticketDivider} />
+                    <div className={styles.ticketBody}>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Vehículo</span>
+                        <span className={styles.ticketRowValue}>
+                          {selectedVehicle.brand} {selectedVehicle.model}
+                        </span>
+                      </div>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Sucursal</span>
+                        <span className={styles.ticketRowValue}>{selectedLocation?.name}</span>
+                      </div>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Dirección</span>
+                        <span className={styles.ticketRowValue}>{selectedLocation?.address}</span>
+                      </div>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Fecha</span>
+                        <span className={styles.ticketRowValue}>{fecha}</span>
+                      </div>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Hora</span>
+                        <span className={styles.ticketRowValue}>{hora}</span>
+                      </div>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Conductor</span>
+                        <span className={styles.ticketRowValue}>{nombre}</span>
+                      </div>
+                      <div className={styles.ticketRow}>
+                        <span className={styles.ticketRowLabel}>Licencia</span>
+                        <span className={styles.ticketRowValue}>{licencia}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.instructionsBox}>
+                    <h4 className={styles.instructionsTitle}>Instrucciones Importantes</h4>
+                    <ul className={styles.instructionsList}>
+                      <li>Llegar 15 minutos antes de la hora de tu cita.</li>
+                      <li>Presentar tu Licencia de Conducir física ({licencia}).</li>
+                      <li>Llevar calzado adecuado cerrado para conducción deportiva.</li>
+                    </ul>
+                  </div>
+
+                  <div className={styles.successActions}>
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className={styles.resetButton}
+                    >
+                      Nueva Reserva
+                    </button>
+                    <Link href="/catalog" className={styles.catalogButton}>
+                      Volver al Catálogo
+                    </Link>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Mensaje de error general de validación */}
             {error && (
@@ -422,25 +614,26 @@ export default function DrivePage() {
             )}
 
             {/* Barra de navegación de pasos */}
-            <div className={styles.navigationActions}>
-              {step > 1 && (
+            {step < 5 && (
+              <div className={styles.navigationActions}>
+                {step > 1 && (
+                  <button
+                    type="button"
+                    className={styles.backButton}
+                    onClick={handlePrevStep}
+                  >
+                    Atrás
+                  </button>
+                )}
                 <button
                   type="button"
-                  className={styles.backButton}
-                  onClick={handlePrevStep}
+                  className={styles.nextButton}
+                  onClick={handleNextStep}
                 >
-                  Atrás
+                  {step === 4 ? "Confirmar Cita" : "Siguiente"}
                 </button>
-              )}
-              <button
-                type="button"
-                className={styles.nextButton}
-                onClick={handleNextStep}
-                disabled={step > 3} // Limitado temporalmente al paso 3 en este commit
-              >
-                Siguiente
-              </button>
-            </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
