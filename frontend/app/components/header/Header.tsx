@@ -29,7 +29,11 @@ export default function Header() {
 
   return (
     <header className={styles.wrapper}>
-      <div className={styles.titleBlock}>
+      <div 
+        className={styles.titleBlock} 
+        onClick={() => router.push("/catalog")} 
+        style={{ cursor: "pointer" }}
+      >
         <span className={styles.subtitle}>Legendary MotorSport</span>
         <h1 className={styles.title}>Legendary MotorSport</h1>
       </div>
@@ -49,8 +53,11 @@ export default function Header() {
         <Link href="/users" className={`${styles.navLink} ${pathname === "/users" ? styles.navLinkActive : ""}`}>
           Usuarios
         </Link>
-        <Link href="/drive" className={styles.navLink}>
+        <Link href="/drive" className={`${styles.navLink} ${pathname === "/drive" ? styles.activeNav : ""}`}>
           Prueba de Manejo
+        </Link>
+        <Link href="/seguros" className={`${styles.navLink} ${pathname === "/seguros" ? styles.activeNav : ""}`}>
+          Seguros Vehiculares
         </Link>
       </nav>
 

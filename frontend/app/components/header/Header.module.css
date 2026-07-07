@@ -195,8 +195,47 @@
     order: 3;
   }
 
+  .navigation {
+    width: 100%;
+    justify-content: center;
+    order: 2;
+  }
+
   .actions {
     width: 100%;
     justify-content: center;
+    order: 3;
   }
 }
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navItem {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.activeNav {
+  color: var(--accent) !important;
+  background: rgba(247, 198, 0, 0.1);
+  border-color: rgba(247, 198, 0, 0.3);
+}
+
