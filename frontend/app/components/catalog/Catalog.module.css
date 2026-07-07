@@ -203,3 +203,91 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.compareBar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 680px);
+  z-index: 60;
+  animation: compareBarIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.compareBarContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.96), rgba(11, 11, 11, 0.98));
+  border: 1px solid rgba(247, 198, 0, 0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  padding: 16px 24px;
+  backdrop-filter: blur(10px);
+}
+
+.compareBarText {
+  font-size: 14px;
+  color: var(--foreground);
+}
+
+.compareBarText strong {
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.compareBarActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.compareClearBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.compareClearBtn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--foreground);
+}
+
+.compareSubmitBtn {
+  background: var(--accent);
+  color: var(--night);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(247, 198, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.compareSubmitBtn:hover {
+  background: var(--accent-2);
+  box-shadow: 0 6px 16px rgba(247, 198, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+@keyframes compareBarIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+

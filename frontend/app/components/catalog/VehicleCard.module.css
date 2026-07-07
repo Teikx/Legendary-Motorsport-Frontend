@@ -105,3 +105,44 @@
     height: 208px;
   }
 }
+
+.cardInner {
+  position: relative;
+}
+
+.compareCheckboxArea {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.compareLabel {
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+  user-select: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.compareLabel:hover {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.checkboxInput {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
