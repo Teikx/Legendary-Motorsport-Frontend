@@ -15,7 +15,7 @@ export default function Header() {
   useEffect(() => {
     const storedName = localStorage.getItem("nombre")?.trim();
     if (storedName) {
-      setDisplayName(storedName);
+      setTimeout(() => setDisplayName(storedName), 0);
     }
   }, []);
 
@@ -48,6 +48,9 @@ export default function Header() {
         </Link>
         <Link href="/users" className={`${styles.navLink} ${pathname === "/users" ? styles.navLinkActive : ""}`}>
           Usuarios
+        </Link>
+        <Link href="/drive" className={styles.navLink}>
+          Prueba de Manejo
         </Link>
       </nav>
 

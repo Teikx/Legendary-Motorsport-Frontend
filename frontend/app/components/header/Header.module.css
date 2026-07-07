@@ -145,11 +145,48 @@
   border-radius: 999px;
 }
 
+.logoLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.navBar {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+.navLink {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
 @media (max-width: 640px) {
   .wrapper {
     margin-bottom: 24px;
     justify-content: center;
     text-align: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .navBar {
+    width: 100%;
+    justify-content: center;
+    gap: 20px;
+    margin: 8px 0;
   }
 
   .nav {

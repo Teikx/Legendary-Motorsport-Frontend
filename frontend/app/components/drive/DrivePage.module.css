@@ -1,0 +1,890 @@
+.container {
+  min-height: 100vh;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.mainWrapper {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  flex: 1;
+  max-width: 76rem;
+  width: 100%;
+  margin: 0 auto;
+  margin-bottom: 24px;
+}
+
+/* Panel izquierdo: Visualizador */
+.previewPanel {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--night);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  min-height: 500px;
+}
+
+.imageContainer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.heroImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.previewPanel:hover .heroImage {
+  transform: scale(1.03);
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 5, 5, 0.1) 0%,
+    rgba(5, 5, 5, 0.5) 50%,
+    rgba(5, 5, 5, 0.95) 100%
+  );
+  z-index: 1;
+}
+
+.vehicleInfoCard {
+  position: relative;
+  z-index: 2;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.badge {
+  align-self: flex-start;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  background: rgba(247, 198, 0, 0.15);
+  color: var(--accent-2);
+  border: 1px solid rgba(247, 198, 0, 0.3);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.heroTitle {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.highlightText {
+  color: var(--accent);
+}
+
+.heroDescription {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 90%;
+  margin: 0;
+}
+
+.specsGrid {
+  display: flex;
+  gap: 40px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+}
+
+.specItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.specLabel {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.specValue {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Panel derecho: Formulario */
+.formPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.formCard {
+  background: linear-gradient(135deg, var(--night) 0%, var(--night-2) 100%);
+  border: 1px solid rgba(247, 198, 0, 0.12);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.formHeader {
+  margin-bottom: 28px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Indicador de pasos */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 18px;
+  border-radius: 12px;
+}
+
+.stepNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.stepActive {
+  opacity: 1;
+}
+
+.stepNumber {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.stepActive .stepNumber {
+  background: var(--accent);
+  color: var(--background);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(247, 198, 0, 0.4);
+}
+
+.stepLabelText {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stepActive .stepLabelText {
+  color: var(--accent);
+}
+
+.stepLine {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 12px;
+  margin-bottom: 20px; /* alinea con el círculo */
+}
+
+/* Contenido de pasos */
+.stepContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+
+/* Grilla de selección de autos */
+.vehicleGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Estilo para barra de scroll premium */
+.vehicleGrid::-webkit-scrollbar {
+  width: 6px;
+}
+.vehicleGrid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+.vehicleGrid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.vehicleGrid::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+.vehicleCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--foreground);
+}
+
+.vehicleCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(247, 198, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.vehicleCardActive {
+  background: rgba(247, 198, 0, 0.08);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(247, 198, 0, 0.15);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.cardBrand {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.vehicleCardActive .cardBrand {
+  color: var(--accent);
+}
+
+.cardModel {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cardSpecMini {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cardDot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* Estilos para Paso 2: Datos */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.formInput {
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0 16px;
+  color: var(--foreground);
+  font-size: 14px;
+  transition: all 0.25s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 10px rgba(247, 198, 0, 0.15);
+}
+
+/* Estilos para Paso 3: Cita */
+.appointmentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.timeSection, .locationSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.timeSlotButton {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeSlotButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(247, 198, 0, 0.4);
+}
+
+.timeSlotActive {
+  background: rgba(247, 198, 0, 0.12);
+  border-color: var(--accent);
+  color: var(--accent-2);
+  box-shadow: 0 0 10px rgba(247, 198, 0, 0.1);
+}
+
+.locationGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.locationGrid::-webkit-scrollbar {
+  width: 6px;
+}
+.locationGrid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.locationGrid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.locationCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.locationCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(247, 198, 0, 0.3);
+}
+
+.locationCardActive {
+  background: rgba(247, 198, 0, 0.06);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(247, 198, 0, 0.1);
+}
+
+.locationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.locationName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.locationCardActive .locationName {
+  color: var(--accent);
+}
+
+.locationAddress {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.locationDescription {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* Estilos para Paso 4: Confirmación */
+.summaryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summarySection {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.summarySubtitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(247, 198, 0, 0.15);
+  padding-bottom: 6px;
+}
+
+.summaryVehicleDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+@media (max-width: 500px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summaryText {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.summaryText strong {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.termsContainer {
+  margin-top: 8px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.checkboxText {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Errores */
+.errorContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 123, 123, 0.1);
+  border: 1px solid rgba(255, 123, 123, 0.25);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 16px;
+}
+
+.errorIcon {
+  color: #ff7b7b;
+  font-weight: bold;
+}
+
+.errorMessage {
+  font-size: 13px;
+  color: #ff7b7b;
+}
+
+/* Pantalla de Éxito */
+.successPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.successHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.successIconWrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(247, 198, 0, 0.1);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  box-shadow: 0 0 20px rgba(247, 198, 0, 0.2);
+}
+
+.successIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.successTitle {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.successSubtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+  max-width: 90%;
+}
+
+.ticketCard {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.ticketHeader {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.ticketLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.ticketCode {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.ticketDivider {
+  height: 1px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  margin: 0 16px;
+}
+
+.ticketBody {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ticketRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.ticketRowLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ticketRowValue {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.instructionsBox {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: left;
+  margin-bottom: 32px;
+}
+
+.instructionsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--foreground);
+}
+
+.instructionsList {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.instructionsList li {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.successActions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.resetButton {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--foreground);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resetButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.catalogButton {
+  flex: 1;
+  background: var(--accent);
+  border: none;
+  color: var(--background);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.catalogButton:hover {
+  background: var(--accent-2);
+  box-shadow: 0 0 20px rgba(247, 198, 0, 0.35);
+}
+
+/* Navegación */
+.navigationActions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 24px;
+}
+
+.backButton {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--foreground);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.nextButton {
+  flex: 2;
+  background: var(--accent);
+  border: none;
+  color: var(--background);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nextButton:hover:not(:disabled) {
+  background: var(--accent-2);
+  box-shadow: 0 0 20px rgba(247, 198, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.nextButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .mainWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .previewPanel {
+    min-height: 380px;
+  }
+
+  .heroTitle {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px;
+  }
+
+  .formCard {
+    padding: 20px;
+  }
+
+  .specsGrid {
+    gap: 20px;
+  }
+
+  .heroTitle {
+    font-size: 26px;
+  }
+}
+
+.stepContentPlaceholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.placeholderText {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 10px;
+  max-width: 80%;
+}

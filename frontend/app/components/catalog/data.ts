@@ -1,4 +1,4 @@
-export interface Vehicle {
+export type Vehicle = {
   id: string;
   brand: string;
   model: string;
@@ -9,7 +9,7 @@ export interface Vehicle {
   image: string;
   colors: string[];
   uploadedAt: string;
-}
+};
 
 export const vehicles: Vehicle[] = [
   {

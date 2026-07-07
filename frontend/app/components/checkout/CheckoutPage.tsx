@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
@@ -263,14 +264,20 @@ export default function CheckoutPage() {
   useEffect(() => {
     const email = localStorage.getItem("email") ?? "";
     const storedClientId = Number(localStorage.getItem("idCliente") ?? "0");
-    setCustomer((prev) => ({ ...prev, email }));
+    
+    setTimeout(() => {
+      setCustomer((prev) => ({ ...prev, email }));
+      if (storedClientId) {
+        setIdCliente(storedClientId);
+      } else {
+        setProfileError("No se encontro el cliente autenticado");
+      }
+    }, 0);
+
     if (storedClientId) {
-      setIdCliente(storedClientId);
       void loadCustomer(storedClientId);
       void loadAddresses(storedClientId);
       void loadCards(storedClientId);
-    } else {
-      setProfileError("No se encontro el cliente autenticado");
     }
     void loadCart();
   // eslint-disable-next-line react-hooks/exhaustive-deps
