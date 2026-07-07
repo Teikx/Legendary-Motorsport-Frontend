@@ -5,17 +5,31 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./Header.module.css";
 
-const DEFAULT_NAME = "Camilo";
+const DEFAULT_NAME = "Usuario";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [displayName, setDisplayName] = useState(DEFAULT_NAME);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const storedName = localStorage.getItem("nombre")?.trim();
-    if (storedName) {
-      setTimeout(() => setDisplayName(storedName), 0);
+    const storedEmail = localStorage.getItem("email")?.trim();
+    const storedRole = localStorage.getItem("idRol")?.trim();
+    setIsAdmin(storedRole === "1");
+
+    if (storedName && storedName.length > 0) {
+      setDisplayName(storedName);
+    } else if (storedEmail && storedEmail.length > 0) {
+      const emailPrefix = storedEmail.split("@")[0];
+      const formattedName = emailPrefix
+        .split(/[._-]/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      setDisplayName(formattedName);
+    } else {
+      setDisplayName(DEFAULT_NAME);
     }
   }, []);
 
@@ -38,26 +52,26 @@ export default function Header() {
         <h1 className={styles.title}>Legendary MotorSport</h1>
       </div>
       
-
-      
       <nav className={styles.nav}>
-        <Link href="/catalog" className={pathname === "/catalog" ? styles.navLinkActive : styles.navLink}>
+        <Link href="/catalog" className={`${styles.navLink} ${pathname === "/catalog" ? styles.navLinkActive : ""}`}>
           Catálogo
         </Link>
-        <Link href="/postventa" className={pathname === "/postventa" ? styles.navLinkActive : styles.navLink}>
+        <Link href="/postventa" className={`${styles.navLink} ${pathname === "/postventa" ? styles.navLinkActive : ""}`}>
           Postventa
         </Link>
         <Link href="/concesionarios" className={`${styles.navLink} ${pathname === "/concesionarios" ? styles.navLinkActive : ""}`}>
           Concesionarios
         </Link>
-        <Link href="/users" className={`${styles.navLink} ${pathname === "/users" ? styles.navLinkActive : ""}`}>
-          Usuarios
-        </Link>
-        <Link href="/drive" className={`${styles.navLink} ${pathname === "/drive" ? styles.activeNav : ""}`}>
+        {isAdmin && (
+          <Link href="/users" className={`${styles.navLink} ${pathname === "/users" ? styles.navLinkActive : ""}`}>
+            Usuarios
+          </Link>
+        )}
+        <Link href="/drive" className={`${styles.navLink} ${pathname === "/drive" ? styles.navLinkActive : ""}`}>
           Prueba de Manejo
         </Link>
-        <Link href="/seguros" className={`${styles.navLink} ${pathname === "/seguros" ? styles.activeNav : ""}`}>
-          Seguros Vehiculares
+        <Link href="/seguros" className={`${styles.navLink} ${pathname === "/seguros" ? styles.navLinkActive : ""}`}>
+          Seguros
         </Link>
       </nav>
 

@@ -141,15 +141,53 @@ export default function DrivePage() {
 
   // Load user data on mount
   useEffect(() => {
-    const storedName = localStorage.getItem("nombre")?.trim();
-    const storedEmail = localStorage.getItem("email")?.trim();
-    const storedPhone = localStorage.getItem("telefono")?.trim();
+    const storedName = localStorage.getItem("nombre")?.trim() || "";
+    const storedEmail = localStorage.getItem("email")?.trim() || "";
+    const storedPhone = localStorage.getItem("telefono")?.trim() || "";
     
-    setTimeout(() => {
-      if (storedName) setNombre(storedName);
-      if (storedEmail) setEmail(storedEmail);
-      if (storedPhone) setTelefono(storedPhone);
-    }, 0);
+    if (storedName) setNombre(storedName);
+    if (storedEmail) setEmail(storedEmail);
+    if (storedPhone) setTelefono(storedPhone);
+
+    const clientId = localStorage.getItem("idCliente");
+    const token = localStorage.getItem("authToken");
+    const API_BASE_URL = "http://localhost:5035";
+
+    if (clientId && token) {
+      const fetchClientInfo = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/clientes/${clientId}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const firstName = data.nombre ?? data.Nombre ?? "";
+            const lastName = data.apellido ?? data.Apellido ?? "";
+            const phone = data.telefono ?? data.Telefono ?? "";
+            const emailAddress = data.email ?? data.Email ?? "";
+            
+            if (firstName || lastName) {
+              const fullName = `${firstName} ${lastName}`.trim();
+              setNombre(fullName);
+              localStorage.setItem("nombre", fullName);
+            }
+            if (phone) {
+              setTelefono(phone);
+              localStorage.setItem("telefono", phone);
+            }
+            if (emailAddress) {
+              setEmail(emailAddress);
+              localStorage.setItem("email", emailAddress);
+            }
+          }
+        } catch (err) {
+          console.error("Error loading customer in DrivePage:", err);
+        }
+      };
+      void fetchClientInfo();
+    }
   }, []);
 
   const validateStep2 = () => {

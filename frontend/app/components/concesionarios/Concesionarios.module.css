@@ -865,3 +865,387 @@
     flex: 1;
   }
 }
+
+/* Custom leaflet container overrides */
+:global(.leaflet-container) {
+  background-color: #050505 !important;
+  font-family: inherit !important;
+}
+
+/* Custom leaflet popup overrides */
+:global(.custom-leaflet-popup .leaflet-popup-content-wrapper) {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(247, 198, 0, 0.4) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+  padding: 6px !important;
+}
+
+:global(.custom-leaflet-popup .leaflet-popup-content) {
+  margin: 12px 14px !important;
+  line-height: 1.5 !important;
+}
+
+:global(.custom-leaflet-popup .leaflet-popup-tip) {
+  background: #0b0b0b !important;
+  border-left: 1.5px solid rgba(247, 198, 0, 0.4) !important;
+  border-bottom: 1.5px solid rgba(247, 198, 0, 0.4) !important;
+  box-shadow: none !important;
+}
+
+/* Disable Leaflet default icon styling styles */
+:global(.custom-leaflet-marker-icon), :global(.custom-leaflet-user-icon) {
+  background: none !important;
+  border: none !important;
+}
+
+/* HTML active marker ring animation override */
+.activeMarkerRing {
+  position: absolute;
+  left: 15px;
+  top: 42px;
+  width: 0px;
+  height: 0px;
+  border: 1.5px solid #f7c600;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: leafletRipple 1.6s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes leafletRipple {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 1;
+    border-width: 3px;
+  }
+  100% {
+    width: 44px;
+    height: 44px;
+    opacity: 0;
+    border-width: 0.5px;
+  }
+}
+
+/* Details Card styling */
+.detailsCard {
+  background: var(--night);
+  border: 1px solid rgba(247, 198, 0, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 20px;
+  animation: fadeIn 0.4s ease-out;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+.detailsHeader {
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 12px;
+}
+
+.detailsKicker {
+  color: var(--accent);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.detailsTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.detailsSubtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.detailsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.colTitle {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.colBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.infoDetailRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.infoDetailIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.infoLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.infoVal {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.infoValLink {
+  font-size: 13.5px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 2px;
+  transition: color 0.2s;
+}
+
+.infoValLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.infoValLinkAccent {
+  font-size: 13.5px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 2px;
+  transition: color 0.2s;
+}
+
+.infoValLinkAccent:hover {
+  color: var(--accent-2);
+  text-decoration: underline;
+}
+
+/* Services section in details */
+.servicesDetailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.serviceDetailItem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.serviceDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.serviceDetailTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.serviceDetailDesc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.ctaWrapper {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.ctaPrimaryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--accent);
+  color: var(--night);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  font-weight: 750;
+  text-transform: uppercase;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.ctaPrimaryButton:hover {
+  background: var(--accent-2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(247, 198, 0, 0.25);
+}
+
+/* Inquiry Form */
+.inquiryForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formGroup {
+  position: relative;
+}
+
+.formInput {
+  width: 100%;
+  background: var(--background);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #000000;
+}
+
+.formTextArea {
+  width: 100%;
+  background: var(--background);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 13px;
+  resize: none;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.formTextArea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #000000;
+}
+
+.formSubmitBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.formSubmitBtn:hover:not(:disabled) {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.formSubmitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Success form state */
+.formSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed rgba(247, 198, 0, 0.3);
+  border-radius: 12px;
+  background: rgba(247, 198, 0, 0.02);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.successIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--night);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(247, 198, 0, 0.3);
+}
+
+.formSuccess h5 {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 700;
+  margin: 0;
+}
+
+.formSuccess p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.resetFormBtn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 4px;
+  padding: 4px;
+}
+
+.resetFormBtn:hover {
+  color: var(--accent-2);
+}
+
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef, FormEvent, useEffect } from "react";
 import Header from "../header/Header";
 import styles from "./Postventa.module.css";
 
@@ -92,6 +92,64 @@ export default function Postventa() {
     email: "",
     telefono: "",
   });
+
+  // Load user data on mount to pre-fill booking form
+  useEffect(() => {
+    const storedName = localStorage.getItem("nombre")?.trim() || "";
+    const storedEmail = localStorage.getItem("email")?.trim() || "";
+    const storedPhone = localStorage.getItem("telefono")?.trim() || "";
+    
+    setFormData((prev) => ({
+      ...prev,
+      nombre: storedName,
+      email: storedEmail,
+      telefono: storedPhone
+    }));
+
+    const clientId = localStorage.getItem("idCliente");
+    const token = localStorage.getItem("authToken");
+    const API_BASE_URL = "http://localhost:5035";
+
+    if (clientId && token) {
+      const fetchClientInfo = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/clientes/${clientId}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const firstName = data.nombre ?? data.Nombre ?? "";
+            const lastName = data.apellido ?? data.Apellido ?? "";
+            const phone = data.telefono ?? data.Telefono ?? "";
+            const emailAddress = data.email ?? data.Email ?? "";
+            
+            setFormData((prev) => {
+              const updated = { ...prev };
+              if (firstName || lastName) {
+                const fullName = `${firstName} ${lastName}`.trim();
+                updated.nombre = fullName;
+                localStorage.setItem("nombre", fullName);
+              }
+              if (phone) {
+                updated.telefono = phone;
+                localStorage.setItem("telefono", phone);
+              }
+              if (emailAddress) {
+                updated.email = emailAddress;
+                localStorage.setItem("email", emailAddress);
+              }
+              return updated;
+            });
+          }
+        } catch (err) {
+          console.error("Error loading customer in Postventa:", err);
+        }
+      };
+      void fetchClientInfo();
+    }
+  }, []);
 
   // FAQ Category Filter States
   const [faqCategory, setFaqCategory] = useState<"all" | "warranty" | "tuning" | "safety">("all");

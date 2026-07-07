@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../header/Header";
 import { CatalogVehicle, VehicleDetail } from "../catalog/types";
 import styles from "./ComparePage.module.css";
@@ -34,6 +34,7 @@ const formatVehicleDetail = (item: any): VehicleDetail => ({
 
 export default function ComparePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [catalogList, setCatalogList] = useState<CatalogVehicle[]>([]);
   const [selectedIds, setSelectedIds] = useState<(number | null)[]>([null, null, null]);
   const [vehicleDetails, setVehicleDetails] = useState<Record<number, VehicleDetail>>({});
@@ -81,6 +82,29 @@ export default function ComparePage() {
       setLoadingDetails((prev) => ({ ...prev, [id]: false }));
     }
   }, [vehicleDetails]);
+
+  // Load initial IDs from query parameter on mount
+  useEffect(() => {
+    const idsParam = searchParams.get("ids");
+    if (idsParam) {
+      const parsedIds = idsParam
+        .split(",")
+        .map((idStr) => {
+          const id = Number(idStr.trim());
+          return isNaN(id) ? null : id;
+        })
+        .filter((id): id is number => id !== null);
+
+      const newSelected: (number | null)[] = [null, null, null];
+      parsedIds.slice(0, 3).forEach((id, index) => {
+        newSelected[index] = id;
+        void fetchVehicleDetail(id);
+      });
+      setSelectedIds(newSelected);
+    }
+    // Only run on mount to initialize selected IDs from URL query params
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Manejar cambio en un selector de columna
   const handleSelectSlot = async (slotIndex: number, idStr: string) => {

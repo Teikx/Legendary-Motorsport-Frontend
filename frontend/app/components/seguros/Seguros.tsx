@@ -109,9 +109,46 @@ export default function Seguros() {
     const storedEmail = localStorage.getItem("email")?.trim() || "";
     const storedPhone = localStorage.getItem("telefono")?.trim() || "";
 
-    setNombreCompleto(storedName || "Camilo");
-    setEmail(storedEmail || "cliente@legendary.com");
+    setNombreCompleto(storedName || "Usuario");
+    setEmail(storedEmail || "");
     setTelefono(storedPhone || "");
+
+    const clientId = localStorage.getItem("idCliente");
+    if (clientId && token) {
+      const fetchClientInfo = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/clientes/${clientId}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const firstName = data.nombre ?? data.Nombre ?? "";
+            const lastName = data.apellido ?? data.Apellido ?? "";
+            const phone = data.telefono ?? data.Telefono ?? "";
+            const emailAddress = data.email ?? data.Email ?? "";
+            
+            if (firstName || lastName) {
+              const fullName = `${firstName} ${lastName}`.trim();
+              setNombreCompleto(fullName);
+              localStorage.setItem("nombre", fullName);
+            }
+            if (phone) {
+              setTelefono(phone);
+              localStorage.setItem("telefono", phone);
+            }
+            if (emailAddress) {
+              setEmail(emailAddress);
+              localStorage.setItem("email", emailAddress);
+            }
+          }
+        } catch (err) {
+          console.error("Error loading customer in Seguros:", err);
+        }
+      };
+      void fetchClientInfo();
+    }
 
     // Load registered insured clients from localStorage
     const localClients = localStorage.getItem("clientes_asegurados");

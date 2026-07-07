@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Header from "../header/Header";
 import styles from "./Concesionarios.module.css";
+import dynamic from "next/dynamic";
+import type L from "leaflet";
+
+const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false });
 
 // Interface for Dealership structure
 interface Dealership {
@@ -126,22 +130,80 @@ export default function Concesionarios() {
   const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null);
   
   // Map control states
-  const [zoom, setZoom] = useState<number>(1.2);
-  const [pan, setPan] = useState<{ x: number; y: number }>({ x: -30, y: -20 });
+  const [zoom, setZoom] = useState<number>(8);
   const [mapMode, setMapMode] = useState<"map" | "satellite">("map");
   const [mouseCoords, setMouseCoords] = useState<{ lat: string; lng: string }>({ lat: "-12.0463", lng: "-77.0310" });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // User location states
-  const [userLocation, setUserLocation] = useState<{ x: number; y: number; lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [distanceAlert, setDistanceAlert] = useState<string | null>(null);
 
   // References
-  const mapSvgRef = useRef<SVGSVGElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
   const dealerListRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Inquiry form states for selected dealership details card
+  const [inquiryName, setInquiryName] = useState("");
+  const [inquiryEmail, setInquiryEmail] = useState("");
+  const [inquiryMsg, setInquiryMsg] = useState("");
+  const [inquiryStatus, setInquiryStatus] = useState<"idle" | "sending" | "success">("idle");
+
+  // Load user data on mount to pre-fill inquiry forms
+  useEffect(() => {
+    const storedName = localStorage.getItem("nombre")?.trim() || "";
+    const storedEmail = localStorage.getItem("email")?.trim() || "";
+    
+    setInquiryName(storedName);
+    setInquiryEmail(storedEmail);
+
+    const clientId = localStorage.getItem("idCliente");
+    const token = localStorage.getItem("authToken");
+    const API_BASE_URL = "http://localhost:5035";
+
+    if (clientId && token) {
+      const fetchClientInfo = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/clientes/${clientId}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            const firstName = data.nombre ?? data.Nombre ?? "";
+            const lastName = data.apellido ?? data.Apellido ?? "";
+            const emailAddress = data.email ?? data.Email ?? "";
+            
+            if (firstName || lastName) {
+              const fullName = `${firstName} ${lastName}`.trim();
+              setInquiryName(fullName);
+              localStorage.setItem("nombre", fullName);
+            }
+            if (emailAddress) {
+              setInquiryEmail(emailAddress);
+              localStorage.setItem("email", emailAddress);
+            }
+          }
+        } catch (err) {
+          console.error("Error loading customer in Concesionarios:", err);
+        }
+      };
+      void fetchClientInfo();
+    }
+  }, []);
+
+  // Reset form when selected dealership changes (maintain pre-filled user details)
+  useEffect(() => {
+    const storedName = localStorage.getItem("nombre")?.trim() || "";
+    const storedEmail = localStorage.getItem("email")?.trim() || "";
+
+    setInquiryName(storedName);
+    setInquiryEmail(storedEmail);
+    setInquiryMsg("");
+    setInquiryStatus("idle");
+  }, [selectedDealerId]);
 
   // Filter & Search logic
   const filteredDealers = useMemo(() => {
@@ -168,7 +230,6 @@ export default function Concesionarios() {
   const sortedDealersWithDistance = useMemo(() => {
     if (!userLocation) return filteredDealers;
 
-    // Simple Euclidean distance multiplier for mock km (1 degree ~ 111km)
     const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
       const dy = lat1 - lat2;
       const dx = lng1 - lng2;
@@ -184,66 +245,30 @@ export default function Concesionarios() {
   }, [filteredDealers, userLocation]);
 
   // Zoom controls
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.2, 3));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.2, 0.8));
-  const handleResetMap = () => {
-    setZoom(1.2);
-    setPan({ x: -30, y: -20 });
-    setSelectedDealerId(null);
-  };
-
-  // Mouse coordinate tracker on Map
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!mapSvgRef.current) return;
-
-    const svg = mapSvgRef.current;
-    const rect = svg.getBoundingClientRect();
-    
-    // Calculate SVG coordinate
-    const x = ((e.clientX - rect.left) / rect.width) * 600;
-    const y = ((e.clientY - rect.top) / rect.height) * 600;
-
-    // Convert SVG coords to mock Latitude/Longitude
-    // Center point (San Borja: X 235, Y 230) maps to Lat: -12.0874, Lng: -77.0041
-    const mockLat = -12.0874 - (y - 230) * 0.005;
-    const mockLng = -77.0041 + (x - 235) * 0.005;
-
-    setMouseCoords({
-      lat: mockLat.toFixed(4),
-      lng: mockLng.toFixed(4)
-    });
-
-    if (isDragging) {
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
-      setPan((prev) => ({
-        x: prev.x + dx / zoom,
-        y: prev.y + dy / zoom
-      }));
-      setDragStart({ x: e.clientX, y: e.clientY });
+  const handleZoomIn = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomIn();
     }
   };
-
-  // Map panning drag handlers
-  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
+  const handleZoomOut = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomOut();
+    }
   };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  const handleResetMap = () => {
+    setSelectedDealerId(null);
+    if (mapInstanceRef.current) {
+      const coords = DEALERSHIPS.map((d) => [d.lat, d.lng] as [number, number]);
+      mapInstanceRef.current.fitBounds(coords, { padding: [50, 50], animate: true });
+    }
   };
 
   // Handle dealer selection
   const selectDealer = (dealer: Dealership) => {
     setSelectedDealerId(dealer.id);
-    // Pan to center dealer (relative coordinates in SVG)
-    setZoom(1.8);
-    // Center map on dealer coords
-    setPan({
-      x: 300 - dealer.x,
-      y: 300 - dealer.y
-    });
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([dealer.lat, dealer.lng], 14, { animate: true });
+    }
 
     // Scroll card into view
     setTimeout(() => {
@@ -259,35 +284,20 @@ export default function Concesionarios() {
     setIsLocating(true);
     setDistanceAlert(null);
 
-    // Simulate location retrieval
-    setTimeout(() => {
-      // User is located near Plaza de Armas, Lima (Mock coordinates)
+    const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+      const dy = lat1 - lat2;
+      const dx = lng1 - lng2;
+      return Math.sqrt(dx * dx + dy * dy) * 111.32;
+    };
+
+    const runSimulation = () => {
       const mockUserLoc = {
-        x: 215,
-        y: 205,
         lat: -12.0463,
         lng: -77.0310
       };
-      
-      setUserLocation(mockUserLoc);
-      setIsLocating(false);
 
-      // Pan to show user and surrounding area
-      setZoom(1.6);
-      setPan({
-        x: 300 - mockUserLoc.x,
-        y: 300 - mockUserLoc.y
-      });
-
-      // Find closest dealership in DEALS
       let closest = DEALERSHIPS[0];
       let minDistance = Infinity;
-
-      const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-        const dy = lat1 - lat2;
-        const dx = lng1 - lng2;
-        return Math.sqrt(dx * dx + dy * dy) * 111.32;
-      };
 
       DEALERSHIPS.forEach((d) => {
         const dist = calculateDistance(mockUserLoc.lat, mockUserLoc.lng, d.lat, d.lng);
@@ -297,11 +307,61 @@ export default function Concesionarios() {
         }
       });
 
-      setDistanceAlert(
-        `Ubicación detectada. El concesionario más cercano es "${closest.name}" a ${minDistance.toFixed(1)} km.`
-      );
+      setUserLocation(mockUserLoc);
+      setIsLocating(false);
       setSelectedDealerId(closest.id);
-    }, 1200);
+
+      setDistanceAlert(
+        `No pudimos acceder a tu GPS. Usando ubicación simulada de Lima Centro. Concesionario más cercano: "${closest.name}" a ${minDistance.toFixed(1)} km.`
+      );
+
+      if (mapInstanceRef.current) {
+        const bounds = [[mockUserLoc.lat, mockUserLoc.lng], [closest.lat, closest.lng]] as [number, number][];
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], animate: true });
+      }
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLoc = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+
+          let closest = DEALERSHIPS[0];
+          let minDistance = Infinity;
+
+          DEALERSHIPS.forEach((d) => {
+            const dist = calculateDistance(userLoc.lat, userLoc.lng, d.lat, d.lng);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closest = d;
+            }
+          });
+
+          setUserLocation(userLoc);
+          setIsLocating(false);
+          setSelectedDealerId(closest.id);
+
+          setDistanceAlert(
+            `Ubicación detectada. El concesionario más cercano es "${closest.name}" a ${minDistance.toFixed(1)} km.`
+          );
+
+          if (mapInstanceRef.current) {
+            const bounds = [[userLoc.lat, userLoc.lng], [closest.lat, closest.lng]] as [number, number][];
+            mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], animate: true });
+          }
+        },
+        (error) => {
+          console.warn("Geolocation error, running fallback simulation:", error);
+          runSimulation();
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      runSimulation();
+    }
   };
 
   // Find active dealer object
@@ -410,182 +470,19 @@ export default function Concesionarios() {
                 </button>
               </div>
 
-              {/* High-tech SVG Map */}
+              {/* High-tech Leaflet Map */}
               <div className={styles.mapWrapper}>
-                <svg
-                  ref={mapSvgRef}
-                  className={`${styles.mapSvg} ${mapMode === "satellite" ? styles.mapSatellite : styles.mapVector}`}
-                  viewBox="0 0 600 600"
-                  onMouseMove={handleMouseMove}
-                  onMouseDown={handleMouseDown}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseUp}
-                >
-                  {/* Definition of gradients and shadows */}
-                  <defs>
-                    {/* Glowing effect for active route path */}
-                    <filter id="route-glow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="6" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                    
-                    {/* Glowing effect for active pin */}
-                    <filter id="pin-glow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="4" result="blur" />
-                      <feColorMatrix type="matrix" values="0 0 0 0 0.97  0 0 0 0 0.77  0 0 0 0 0  0 0 0 0.8 0" />
-                      <feMerge>
-                        <feMergeNode />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-
-                    <radialGradient id="water-grad" cx="20%" cy="40%" r="80%">
-                      <stop offset="0%" stopColor="#080c18" />
-                      <stop offset="100%" stopColor="#03050a" />
-                    </radialGradient>
-
-                    <radialGradient id="water-sat-grad" cx="20%" cy="40%" r="80%">
-                      <stop offset="0%" stopColor="#071221" />
-                      <stop offset="100%" stopColor="#02070e" />
-                    </radialGradient>
-                  </defs>
-
-                  {/* Ocean Layer */}
-                  <rect width="600" height="600" fill={mapMode === "satellite" ? "url(#water-sat-grad)" : "url(#water-grad)"} />
-
-                  {/* Topography Coordinate Grid Lines (in background) */}
-                  <g stroke="rgba(247, 198, 0, 0.05)" strokeWidth="0.5" strokeDasharray="3,12">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <line key={`v-${i}`} x1={i * 50} y1="0" x2={i * 50} y2="600" />
-                    ))}
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <line key={`h-${i}`} x1="0" y1={i * 50} x2="600" y2={i * 50} />
-                    ))}
-                  </g>
-
-                  {/* Map content transformed group (handles drag and zoom) */}
-                  <g transform={`scale(${zoom}) translate(${pan.x}, ${pan.y})`} style={{ transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)" }}>
-                    
-                    {/* Outline of Coastline (Lima / Peru area) */}
-                    <path
-                      d="M -100,50 L 50,80 L 100,100 L 150,130 L 180,180 L 210,230 L 220,240 L 230,260 L 250,290 L 300,380 L 340,430 L 350,450 L 360,470 L 410,530 L 460,570 L 600,600 L 700,650 L 700,-100 L -100,-100 Z"
-                      fill={mapMode === "satellite" ? "#0f1115" : "#0a0a0c"}
-                      stroke={mapMode === "satellite" ? "#1b232c" : "rgba(247, 198, 0, 0.15)"}
-                      strokeWidth="2"
-                    />
-
-                    {/* Coastal glow effect */}
-                    <path
-                      d="M -100,50 L 50,80 L 100,100 L 150,130 L 180,180 L 210,230 L 220,240 L 230,260 L 250,290 L 300,380 L 340,430 L 350,450 L 360,470 L 410,530 L 460,570 L 600,600"
-                      fill="none"
-                      stroke={mapMode === "satellite" ? "rgba(0, 150, 255, 0.2)" : "rgba(247, 198, 0, 0.25)"}
-                      strokeWidth="8"
-                      filter="blur(4px)"
-                    />
-
-                    {/* Basic Road Network / Highways (GTA styled layout) */}
-                    <g fill="none" strokeWidth="1" opacity={mapMode === "satellite" ? "0.35" : "0.2"}>
-                      {/* Panamericana Sur / Norte Highway */}
-                      <path d="M 50,80 L 105,103 L 153,132 L 212,192 L 236,233 L 252,291 L 302,381 L 342,431 L 352,451 L 412,531 L 462,571" stroke="#f7c600" strokeWidth="2.5" />
-                      
-                      {/* Javier Prado Expressway */}
-                      <path d="M 185,220 L 235,230 L 300,240 L 360,250 L 500,270" stroke="#f7c600" strokeWidth="1.5" />
-                      
-                      {/* Túpac Amaru Highway */}
-                      <path d="M 220,140 L 210,190 L 215,205 L 235,230" stroke="#888" />
-                      
-                      {/* Connection to Huancayo (Carretera Central) */}
-                      <path d="M 235,230 L 280,210 L 330,225 L 390,240 L 480,280" stroke="#f7c600" strokeWidth="1.8" />
-                    </g>
-
-                    {/* Regional Labels */}
-                    <g fill={mapMode === "satellite" ? "rgba(255,255,255,0.4)" : "rgba(247, 198, 0, 0.3)"} fontSize="10" fontFamily="monospace" letterSpacing="2">
-                      <text x="35" y="250" transform="rotate(-30 35 250)">PACIFIC OCEAN</text>
-                      <text x="245" y="195" fontSize="8" letterSpacing="1">LIMA METROPOLITANA</text>
-                      <text x="362" y="420" fontSize="8" letterSpacing="1">VALLE CAÑETE</text>
-                      <text x="440" y="260" fontSize="8" letterSpacing="1">ANDES CENTRO</text>
-                    </g>
-
-                    {/* Animated Route Path (Draws route if userLocation is active and a dealer is selected) */}
-                    {userLocation && selectedDealerId && activeDealerObj && (
-                      <g>
-                        {/* Dynamic Path calculation: Simple curve */}
-                        <path
-                          d={`M ${userLocation.x},${userLocation.y} Q ${(userLocation.x + activeDealerObj.x) / 2 - 30},${(userLocation.y + activeDealerObj.y) / 2 - 30} ${activeDealerObj.x},${activeDealerObj.y}`}
-                          fill="none"
-                          stroke="rgba(247, 198, 0, 0.8)"
-                          strokeWidth="3.5"
-                          filter="url(#route-glow)"
-                          strokeDasharray="6, 6"
-                          className={styles.animatedRoute}
-                        />
-                        <path
-                          d={`M ${userLocation.x},${userLocation.y} Q ${(userLocation.x + activeDealerObj.x) / 2 - 30},${(userLocation.y + activeDealerObj.y) / 2 - 30} ${activeDealerObj.x},${activeDealerObj.y}`}
-                          fill="none"
-                          stroke="#ffffff"
-                          strokeWidth="1.5"
-                          strokeDasharray="4, 8"
-                          className={styles.animatedRouteFast}
-                        />
-                      </g>
-                    )}
-
-                    {/* User Location Glowing Marker */}
-                    {userLocation && (
-                      <g transform={`translate(${userLocation.x}, ${userLocation.y})`}>
-                        <circle r="14" fill="rgba(247, 198, 0, 0.25)" className={styles.userLocationPulse} />
-                        <circle r="6" fill="#f7c600" stroke="#000" strokeWidth="1.5" />
-                        <circle r="2" fill="#fff" />
-                        <text x="10" y="4" fill="#f7c600" fontSize="8" fontWeight="bold" fontFamily="sans-serif">TÚ</text>
-                      </g>
-                    )}
-
-                    {/* Dealership Markers */}
-                    {filteredDealers.map((dealer) => {
-                      const isActive = dealer.id === selectedDealerId;
-                      return (
-                        <g
-                          key={dealer.id}
-                          transform={`translate(${dealer.x}, ${dealer.y})`}
-                          className={styles.markerGroup}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            selectDealer(dealer);
-                          }}
-                        >
-                          {/* Pulsing ring for active dealer */}
-                          {isActive && (
-                            <circle r="18" fill="none" stroke="#f7c600" strokeWidth="1.5" className={styles.activeMarkerRing} />
-                          )}
-                          
-                          {/* Marker Pin */}
-                          <path
-                            d="M 0,0 C -6,-12 -8,-16 -8,-22 A 8,8 0 1,1 8,-22 C 8,-16 6,-12 0,0 Z"
-                            fill={isActive ? "#f7c600" : "#d12e2e"}
-                            stroke="#000"
-                            strokeWidth="1.5"
-                            filter={isActive ? "url(#pin-glow)" : "none"}
-                            className={styles.pinPath}
-                          />
-                          
-                          {/* Inner Dot */}
-                          <circle cx="0" cy="-22" r="3.5" fill="#ffffff" />
-
-                          {/* Hover Tooltip Label */}
-                          <g className={styles.markerLabel}>
-                            <rect x="-60" y="-45" width="120" height="18" rx="4" fill="#0b0b0b" stroke="rgba(247, 198, 0, 0.3)" strokeWidth="1" />
-                            <text x="0" y="-33" fill="#ffffff" fontSize="8.5" textAnchor="middle" fontWeight="bold">
-                              {dealer.name.split(" ").slice(1).join(" ")}
-                            </text>
-                          </g>
-                        </g>
-                      );
-                    })}
-                  </g>
-                </svg>
+                <LeafletMap
+                  dealerships={DEALERSHIPS}
+                  selectedDealerId={selectedDealerId}
+                  onSelectDealer={selectDealer}
+                  userLocation={userLocation}
+                  mapMode={mapMode}
+                  onMouseMoveCoords={(lat, lng) => setMouseCoords({ lat, lng })}
+                  zoom={zoom}
+                  setZoom={setZoom}
+                  mapInstanceRef={mapInstanceRef}
+                />
 
                 {/* Coordinate Readout Footer on Map */}
                 <div className={styles.coordsFooter}>
@@ -597,6 +494,158 @@ export default function Concesionarios() {
                 </div>
               </div>
             </div>
+
+            {/* Active Dealer Details Panel */}
+            {activeDealerObj && (
+              <div className={styles.detailsCard}>
+                <div className={styles.detailsHeader}>
+                  <span className={styles.detailsKicker}>Ficha de Concesionario Oficial</span>
+                  <h3 className={styles.detailsTitle}>{activeDealerObj.name}</h3>
+                  <p className={styles.detailsSubtitle}>Sede {activeDealerObj.city}</p>
+                </div>
+
+                <div className={styles.detailsGrid}>
+                  {/* Column 1: Info */}
+                  <div className={styles.detailsCol}>
+                    <h4 className={styles.colTitle}>Información de Contacto</h4>
+                    <div className={styles.colBody}>
+                      <div className={styles.infoDetailRow}>
+                        <span className={styles.infoDetailIcon}>📍</span>
+                        <div>
+                          <p className={styles.infoLabel}>Dirección</p>
+                          <p className={styles.infoVal}>{activeDealerObj.address}</p>
+                        </div>
+                      </div>
+                      <div className={styles.infoDetailRow}>
+                        <span className={styles.infoDetailIcon}>📞</span>
+                        <div>
+                          <p className={styles.infoLabel}>Teléfono</p>
+                          <a href={`tel:${activeDealerObj.phone.replace(/[^0-9]/g, '')}`} className={styles.infoValLink}>
+                            {activeDealerObj.phone}
+                          </a>
+                        </div>
+                      </div>
+                      <div className={styles.infoDetailRow}>
+                        <span className={styles.infoDetailIcon}>⏰</span>
+                        <div>
+                          <p className={styles.infoLabel}>Horario de Atención</p>
+                          <p className={styles.infoVal}>{activeDealerObj.hours}</p>
+                        </div>
+                      </div>
+                      <div className={styles.infoDetailRow}>
+                        <span className={styles.infoDetailIcon}>🌐</span>
+                        <div>
+                          <p className={styles.infoLabel}>Sitio Web</p>
+                          <a href={activeDealerObj.website} target="_blank" rel="noopener noreferrer" className={styles.infoValLinkAccent}>
+                            Visitar web oficial →
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 2: Services */}
+                  <div className={styles.detailsCol}>
+                    <h4 className={styles.colTitle}>Servicios Disponibles</h4>
+                    <div className={styles.servicesDetailsList}>
+                      {activeDealerObj.services.map((service) => {
+                        const serviceLabels = {
+                          venta: { title: "Venta de Nuevos", desc: "Vehículos 0km Legendary Motorsport.", dot: styles.dotRed },
+                          servicios: { title: "Taller Oficial", desc: "Servicio técnico oficial homologado.", dot: styles.dotBlue },
+                          repuestos: { title: "Repuestos Originales", desc: "Venta directa de accesorios de fábrica.", dot: styles.dotGreen },
+                          seminuevos: { title: "Seminuevos Certificados", desc: "Autos de segundo uso garantizados.", dot: styles.dotYellow },
+                          carroceria: { title: "Chapa y Pintura", desc: "Centro de enderezado y pintura Premium.", dot: styles.dotPurple }
+                        };
+                        const info = serviceLabels[service as keyof typeof serviceLabels];
+                        return (
+                          <div key={service} className={styles.serviceDetailItem}>
+                            <span className={`${styles.serviceDot} ${info.dot}`}></span>
+                            <div>
+                              <p className={styles.serviceDetailTitle}>{info.title}</p>
+                              <p className={styles.serviceDetailDesc}>{info.desc}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <div className={styles.ctaWrapper}>
+                      <a href={`/drive?dealer=${activeDealerObj.id}`} className={styles.ctaPrimaryButton}>
+                        🏎️ Agendar Prueba de Manejo
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Contact Form */}
+                  <div className={styles.detailsCol}>
+                    <h4 className={styles.colTitle}>Consulta Rápida</h4>
+                    {inquiryStatus === "success" ? (
+                      <div className={styles.formSuccess}>
+                        <div className={styles.successIcon}>✓</div>
+                        <h5>¡Mensaje Enviado!</h5>
+                        <p>Nos pondremos en contacto contigo en menos de 24 horas hábiles.</p>
+                        <button
+                          type="button"
+                          className={styles.resetFormBtn}
+                          onClick={() => setInquiryStatus("idle")}
+                        >
+                          Enviar otra consulta
+                        </button>
+                      </div>
+                    ) : (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!inquiryName || !inquiryEmail) return;
+                          setInquiryStatus("sending");
+                          setTimeout(() => {
+                            setInquiryStatus("success");
+                          }, 1000);
+                        }}
+                        className={styles.inquiryForm}
+                      >
+                        <div className={styles.formGroup}>
+                          <input
+                            type="text"
+                            placeholder="Nombre y Apellido"
+                            value={inquiryName}
+                            onChange={(e) => setInquiryName(e.target.value)}
+                            required
+                            className={styles.formInput}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <input
+                            type="email"
+                            placeholder="Correo Electrónico"
+                            value={inquiryEmail}
+                            onChange={(e) => setInquiryEmail(e.target.value)}
+                            required
+                            className={styles.formInput}
+                          />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <textarea
+                            placeholder="¿En qué podemos ayudarte? (Ej: cotización, cita...)"
+                            value={inquiryMsg}
+                            onChange={(e) => setInquiryMsg(e.target.value)}
+                            rows={3}
+                            className={styles.formTextArea}
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={inquiryStatus === "sending" || !inquiryName || !inquiryEmail}
+                          className={styles.formSubmitBtn}
+                        >
+                          {inquiryStatus === "sending" ? "Enviando..." : "Enviar Solicitud"}
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Dealerships List Column */}

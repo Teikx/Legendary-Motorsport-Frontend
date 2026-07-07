@@ -43,22 +43,28 @@ export default function VehicleDetailModal({
   }, [inventory, inventoryForColor, selectedProductId]);
   const stockAvailable = selectedInventory?.stock ?? 0;
 
+  // Reset selected color/product/quantity only when the selected vehicle changes
   useEffect(() => {
-    if (selectedColor !== "" || selectedProductId !== null || quantity !== 1) {
-      setSelectedColor("");
-      setSelectedProductId(null);
-      setQuantity(1);
-    }
-  }, [vehicle?.id, selectedColor, selectedProductId, quantity]);
+    setSelectedColor("");
+    setSelectedProductId(null);
+    setQuantity(1);
+  }, [vehicle?.id]);
 
+  // Reset isClosing when the modal is opened
   useEffect(() => {
-    if (isOpen && isClosing) {
+    if (isOpen) {
       setIsClosing(false);
     }
+  }, [isOpen]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
     return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
+      if (closeTimer.current) {
+        clearTimeout(closeTimer.current);
+      }
     };
-  }, [isOpen, isClosing]);
+  }, []);
 
   if ((!isOpen && !isClosing) || !vehicle) {
     return null;

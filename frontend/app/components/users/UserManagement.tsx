@@ -73,7 +73,7 @@ const mapBackendToUser = (c: any): User => ({
   apellido: c.apellido || "",
   email: c.email || "",
   telefono: c.telefono || "",
-  rol: c.idRol === 2 ? "Administrador" : "Cliente",
+  rol: c.idRol === 1 ? "Administrador" : "Cliente",
   estado: "Activo",
   fechaRegistro: c.fechaCreacion ? c.fechaCreacion.split("T")[0] : "",
 });
@@ -241,7 +241,7 @@ export default function UserManagement() {
           apellido: formData.apellido.trim(),
           telefono: formData.telefono.trim(),
           email: formData.email.trim(),
-          idRol: formData.rol === "Administrador" ? 2 : 1, // 2 = Admin, 1 = Usuario
+          idRol: formData.rol === "Administrador" ? 1 : 2, // 1 = Admin, 2 = Usuario
           contrasena: formData.contrasena.trim(),
         }),
       });
@@ -269,7 +269,7 @@ export default function UserManagement() {
         apellido: formData.apellido.trim(),
         telefono: formData.telefono.trim(),
         email: formData.email.trim(),
-        idRol: formData.rol === "Administrador" ? 2 : 1,
+        idRol: formData.rol === "Administrador" ? 1 : 2,
       };
       
       if (formData.contrasena.trim()) {
