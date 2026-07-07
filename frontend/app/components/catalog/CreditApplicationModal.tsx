@@ -9,6 +9,7 @@ type CreditApplicationModalProps = {
   selectedInventory: InventoryItem | null;
   isOpen: boolean;
   onClose: () => void;
+  onRecommendCheaperVehicle?: () => void;
 };
 
 type CreditFormState = {
@@ -23,6 +24,8 @@ type CreditFormState = {
   downPayment: string;
   termMonths: "12" | "24" | "36" | "48" | "60";
 };
+
+type RequestStatus = "sent" | "inProgress" | "completed";
 
 const initialFormState: CreditFormState = {
   fullName: "",
@@ -42,14 +45,25 @@ export default function CreditApplicationModal({
   selectedInventory,
   isOpen,
   onClose,
+  onRecommendCheaperVehicle,
 }: CreditApplicationModalProps) {
   const [formState, setFormState] = useState<CreditFormState>(initialFormState);
   const [errors, setErrors] = useState<Partial<Record<keyof CreditFormState, string>>>({});
-  const [requestStatus, setRequestStatus] = useState<'sent' | 'inProgress' | 'completed'>('sent');
+  const [requestStatus, setRequestStatus] = useState<RequestStatus>('sent');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const carPrice = useMemo(() => {
+    if (selectedInventory) return selectedInventory.precio;
+    if (vehicle && vehicle.inventory.length > 0) return vehicle.inventory[0].precio;
+    return 0;
+  }, [vehicle, selectedInventory]);
+
+  const suggestedDownPayment = useMemo(() => {
+    return carPrice > 0 ? Math.round(carPrice * 0.25) : 0;
+  }, [carPrice]);
 
   // Reset status when modal opens
   useEffect(() => {
@@ -58,7 +72,7 @@ export default function CreditApplicationModal({
     }
   }, [isOpen]);
 
-  // Prefill email if available in localStorage
+  // Prefill email and a suggested down payment when the modal opens
   useEffect(() => {
     if (isOpen) {
       setIsClosing(false);
@@ -68,18 +82,13 @@ export default function CreditApplicationModal({
       setFormState({
         ...initialFormState,
         email: savedEmail,
+        downPayment: String(suggestedDownPayment),
       });
     }
     return () => {
       if (closeTimer.current) clearTimeout(closeTimer.current);
     };
-  }, [isOpen]);
-
-  const carPrice = useMemo(() => {
-    if (selectedInventory) return selectedInventory.precio;
-    if (vehicle && vehicle.inventory.length > 0) return vehicle.inventory[0].precio;
-    return 0;
-  }, [vehicle, selectedInventory]);
+  }, [isOpen, suggestedDownPayment]);
 
   // Dynamic calculations for the loan preview
   const downPaymentVal = Number(formState.downPayment) || 0;
@@ -88,12 +97,38 @@ export default function CreditApplicationModal({
 
   const estimatedMonthlyPayment = useMemo(() => {
     if (loanAmount <= 0 || termMonthsVal <= 0) return 0;
-    // Simple mock interest rate layout: 12% annual interest (1% monthly)
     const monthlyRate = 0.01;
-    const payment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, termMonthsVal)) / 
+    const payment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, termMonthsVal)) /
                     (Math.pow(1 + monthlyRate, termMonthsVal) - 1);
     return Math.round(payment);
   }, [loanAmount, termMonthsVal]);
+
+  const monthlyAvailable = useMemo(() => {
+    const income = Number(formState.monthlyIncome) || 0;
+    const expenses = Number(formState.monthlyExpenses) || 0;
+    return Math.max(0, income - expenses);
+  }, [formState.monthlyIncome, formState.monthlyExpenses]);
+
+  const affordabilityCheck = useMemo(() => {
+    if (!estimatedMonthlyPayment || monthlyAvailable <= 0) return null;
+    const recommendedMonthlyLimit = monthlyAvailable * 0.4;
+    const needsAdvice = estimatedMonthlyPayment > recommendedMonthlyLimit;
+    const recommendedDownPayment = Math.max(downPaymentVal, Math.round(carPrice * 0.25));
+    const targetLoanAmount = Math.round(
+      recommendedMonthlyLimit * ((Math.pow(1 + 0.01, termMonthsVal) - 1) / (0.01 * Math.pow(1 + 0.01, termMonthsVal))),
+    );
+    const targetVehiclePrice = Math.max(0, targetLoanAmount + recommendedDownPayment);
+
+    return {
+      needsAdvice,
+      recommendedMonthlyLimit,
+      recommendedDownPayment,
+      targetVehiclePrice,
+    };
+  }, [carPrice, downPaymentVal, estimatedMonthlyPayment, monthlyAvailable, termMonthsVal]);
+
+  const progressSteps = ["Enviando", "En proceso", "Enviado"];
+  const currentStepIndex = requestStatus === "sent" ? 0 : requestStatus === "inProgress" ? 1 : 2;
 
   if ((!isOpen && !isClosing) || !vehicle) return null;
 
@@ -105,6 +140,32 @@ export default function CreditApplicationModal({
       setIsClosing(false);
       onClose();
     }, 320);
+  };
+
+  const handleApplyHigherDownPayment = () => {
+    if (!affordabilityCheck) return;
+    setFormState((prev) => ({
+      ...prev,
+      downPayment: String(affordabilityCheck.recommendedDownPayment),
+    }));
+    setSubmitSuccess(false);
+    setRequestStatus('sent');
+  };
+
+  const handleApplyCheaperVehicle = () => {
+    if (onRecommendCheaperVehicle) {
+      onRecommendCheaperVehicle();
+      return;
+    }
+
+    if (!affordabilityCheck) return;
+    setFormState((prev) => ({
+      ...prev,
+      downPayment: String(Math.max(Number(prev.downPayment) || 0, Math.round(carPrice * 0.25))),
+      termMonths: "36",
+    }));
+    setSubmitSuccess(false);
+    setRequestStatus('sent');
   };
 
   const handleChange = (field: keyof CreditFormState, value: string) => {
@@ -190,8 +251,9 @@ export default function CreditApplicationModal({
 
         {submitSuccess ? (
           <div className={styles.successScreen}>
+            <div className={styles.sportyBadge}>Pit stop financiero</div>
             <h2 className={styles.title}>Solicitud de crédito</h2>
-            <p className={styles.summary}>Tu solicitud ha sido enviada con éxito. A continuación se muestra el resumen de los datos ingresados:</p>
+            <p className={styles.summary}>Tu solicitud fue enviada con éxito. Aquí tienes un resumen ordenado con el análisis de tu perfil y el vehículo elegido.</p>
             <div className={styles.summaryGrid}>
               <div className={styles.summaryCard}><strong>Nombre completo</strong><span>{formState.fullName}</span></div>
               <div className={styles.summaryCard}><strong>Email</strong><span>{formState.email}</span></div>
@@ -204,8 +266,32 @@ export default function CreditApplicationModal({
               <div className={styles.summaryCard}><strong>Pie / Enganche</strong><span>${formState.downPayment}</span></div>
               <div className={styles.summaryCard}><strong>Plazo</strong><span>{formState.termMonths} meses</span></div>
             </div>
+
+            {affordabilityCheck?.needsAdvice ? (
+              <div className={styles.adviceCard}>
+                <div className={styles.adviceHeading}>Asesoría deportiva recomendada</div>
+                <p>Tu capacidad actual deja muy poco margen para este pago. Te recomendamos ajustar una de estas dos opciones para que te quede más cómodo:</p>
+                <ul className={styles.adviceList}>
+                  <li>Subir el pie de enganche a <strong>${affordabilityCheck.recommendedDownPayment.toLocaleString("en-US")}</strong>.</li>
+                  <li>Elegir un vehículo más cercano a <strong>${affordabilityCheck.targetVehiclePrice.toLocaleString("en-US")}</strong> para proteger tu presupuesto mensual.</li>
+                </ul>
+                <div className={styles.adviceActions}>
+                  <button type="button" className={styles.secondaryActionButton} onClick={handleApplyHigherDownPayment}>Subir pie de enganche</button>
+                  <button type="button" className={styles.secondaryActionButton} onClick={handleApplyCheaperVehicle}>Ver opción más económica</button>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.adviceCardPositive}>
+                <div className={styles.adviceHeading}>Análisis favorable</div>
+                <p>Tu perfil muestra un margen saludable para este crédito. Puedes seguir con el proceso con confianza y, si quieres, ajustar el plazo para bajar aún más la cuota mensual.</p>
+              </div>
+            )}
+
             <div className={styles.progressSection}>
-              <p>Estado de la solicitud: <strong>Completado</strong></p>
+              <div className={styles.progressHeader}>
+                <span>Estado de la solicitud</span>
+                <strong>Enviado</strong>
+              </div>
               <div className={styles.progressBar}>
                 <div className={styles.progressFill} style={{ width: '100%' }}></div>
               </div>
@@ -214,12 +300,30 @@ export default function CreditApplicationModal({
           </div>
         ) : isSubmitting ? (
           <div className={styles.successScreen}>
+            <div className={styles.sportyBadge}>Pit stop financiero</div>
             <h2 className={styles.title}>Procesando solicitud</h2>
-            <p className={styles.summary}>Tu solicitud está en progreso.</p>
+            <p className={styles.summary}>Estamos analizando tu perfil y el crédito del vehículo para darte una respuesta ordenada y clara.</p>
             <div className={styles.progressSection}>
-              <p>Estado de la solicitud: <strong>{requestStatus === 'sent' ? 'Enviado' : requestStatus === 'inProgress' ? 'En curso' : 'Completado'}</strong></p>
+              <div className={styles.progressHeader}>
+                <span>Estado de la solicitud</span>
+                <strong>{requestStatus === 'sent' ? 'Enviando' : requestStatus === 'inProgress' ? 'En proceso' : 'Enviado'}</strong>
+              </div>
               <div className={styles.progressBar}>
                 <div className={styles.progressFill} style={{ width: requestStatus === 'sent' ? '33%' : requestStatus === 'inProgress' ? '66%' : '100%' }}></div>
+              </div>
+              <div className={styles.stepper}>
+                {progressSteps.map((step, index) => {
+                  const isActive = index === currentStepIndex;
+                  const isComplete = index < currentStepIndex;
+                  return (
+                    <div
+                      key={step}
+                      className={`${styles.stepChip} ${isComplete ? styles.stepChipComplete : ''} ${isActive ? styles.stepChipActive : ''}`}
+                    >
+                      {step}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -409,6 +513,9 @@ export default function CreditApplicationModal({
                     className={errors.downPayment ? styles.inputError : ""}
                   />
                   {errors.downPayment && <span className={styles.errorMessage}>{errors.downPayment}</span>}
+                  {!errors.downPayment && (
+                    <span className={styles.helperText}>Sugerido automáticamente: ${suggestedDownPayment.toLocaleString("en-US")}</span>
+                  )}
                 </div>
 
                 <div className={styles.formGroup}>

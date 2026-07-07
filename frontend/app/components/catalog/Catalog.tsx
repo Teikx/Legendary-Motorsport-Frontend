@@ -153,7 +153,10 @@ export default function Catalog() {
     [cartItems],
   );
 
-  const openVehicleDetail = async (vehicle: CatalogVehicle) => {
+  const openVehicleDetail = async (
+    vehicle: CatalogVehicle,
+    options?: { openCredit?: boolean },
+  ) => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/catalogo/${vehicle.id}`,
@@ -162,7 +165,14 @@ export default function Catalog() {
       if (!response.ok || !data) {
         throw new Error("No se pudo cargar el detalle");
       }
-      setSelectedVehicle(formatVehicleDetail(data));
+      const formattedVehicle = formatVehicleDetail(data);
+      setSelectedVehicle(formattedVehicle);
+      if (options?.openCredit) {
+        setSelectedCreditInventory(formattedVehicle.inventory[0] ?? null);
+        setIsCreditOpen(true);
+        setIsDetailOpen(false);
+        return;
+      }
       setIsDetailOpen(true);
     } catch (err) {
       setError("No se pudo cargar el detalle del vehiculo");
@@ -171,6 +181,13 @@ export default function Catalog() {
 
   const closeVehicleDetail = () => {
     setIsDetailOpen(false);
+  };
+
+  const handleRecommendCheaperVehicle = () => {
+    if (vehicles.length === 0) return;
+    const cheapestVehicle = [...vehicles].sort((a, b) => a.minPrice - b.minPrice)[0];
+    if (!cheapestVehicle) return;
+    void openVehicleDetail(cheapestVehicle, { openCredit: true });
   };
 
   const handleAddToCart = async (productId: number, quantity: number) => {
@@ -390,6 +407,7 @@ export default function Catalog() {
           setIsCreditOpen(false);
           setSelectedCreditInventory(null);
         }}
+        onRecommendCheaperVehicle={handleRecommendCheaperVehicle}
       />
     </div>
   );
