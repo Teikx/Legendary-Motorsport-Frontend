@@ -42,7 +42,15 @@ export default function Seguros() {
   const router = useRouter();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"cliente" | "vehiculo" | "cotizacion">("cliente");
+  const [activeTab, setActiveTab] = useState<"cliente" | "vehiculo" | "cotizacion" | "avaluo">("cliente");
+
+  // Valuation (Avalúo) States
+  const [avAnio, setAvAnio] = useState(new Date().getFullYear().toString());
+  const [avKilometraje, setAvKilometraje] = useState("");
+  const [avEstado, setAvEstado] = useState<"Excelente" | "Bueno" | "Regular" | "Desgastado">("Bueno");
+  const [avValorOriginal, setAvValorOriginal] = useState("");
+  const [avValorCalculado, setAvValorCalculado] = useState<number | null>(null);
+  const [avProyeccion, setAvProyeccion] = useState<number[]>([]);
 
   // State for Insured Client Form fields
   const [nombreCompleto, setNombreCompleto] = useState("");
@@ -385,6 +393,42 @@ export default function Seguros() {
     localStorage.setItem("vehiculos_asegurados", JSON.stringify(updated));
   };
 
+  const handleCalculateAvaluo = (e: React.FormEvent) => {
+    e.preventDefault();
+    const original = parseFloat(avValorOriginal) || 0;
+    if (original <= 0) return;
+
+    const currentYear = new Date().getFullYear();
+    const years = currentYear - (parseInt(avAnio) || currentYear);
+    const deprecYears = Math.pow(0.91, Math.max(0, years)); // 9% depreciación anual por año de antigüedad
+
+    const mileage = parseFloat(avKilometraje) || 0;
+    const deprecMileage = Math.max(0.5, 1 - (mileage / 150000) * 0.3); // hasta 30% menos por kilometraje extremo
+
+    let condMultiplier = 0.9; // Bueno
+    if (avEstado === "Excelente") condMultiplier = 1.0;
+    if (avEstado === "Regular") condMultiplier = 0.7;
+    if (avEstado === "Desgastado") condMultiplier = 0.45;
+
+    const finalVal = Math.round(original * deprecYears * deprecMileage * condMultiplier);
+    const calculated = Math.max(1000, finalVal);
+    setAvValorCalculado(calculated);
+
+    // Calcular proyección a 5 años (12% depreciación anual acumulada)
+    const proy = [];
+    for (let i = 0; i <= 5; i++) {
+      proy.push(Math.round(calculated * Math.pow(0.88, i)));
+    }
+    setAvProyeccion(proy);
+  };
+
+  const handleApplyAvaluo = () => {
+    if (avValorCalculado !== null) {
+      setValorEstimado(avValorCalculado.toString());
+      setActiveTab("vehiculo");
+    }
+  };
+
   return (
     <div className={styles.shell}>
       <div className={styles.backdrop} />
@@ -464,34 +508,67 @@ export default function Seguros() {
             </svg>
             Planes y Cotización
           </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === "avaluo" ? styles.activeTab : ""}`}
+            onClick={() => {
+              setActiveTab("avaluo");
+              setShowHistory(false);
+            }}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Avalúo Vehicular
+          </button>
         </div>
 
         <header className={styles.pageHeader}>
           <div>
             <p className={styles.kicker}>Seguros de Prestigio</p>
             <h1 className={styles.pageTitle}>
-              {activeTab === "cliente" ? "Registro del Cliente" : activeTab === "vehiculo" ? "Registro del Vehículo" : "Planes y Cotización"}
+              {activeTab === "cliente" 
+                ? "Registro del Cliente" 
+                : activeTab === "vehiculo" 
+                ? "Registro del Vehículo" 
+                : activeTab === "cotizacion" 
+                ? "Planes y Cotización" 
+                : "Calculadora de Avalúo y Depreciación"}
             </h1>
             <p className={styles.pageSubtitle}>
               {activeTab === "cliente"
                 ? "Registra tus datos personales y de conductor para habilitar tu perfil de seguros en la plataforma."
                 : activeTab === "vehiculo"
                 ? "Registra los datos del vehículo que deseas asegurar para continuar con la cotización."
-                : "Compara coberturas y ajusta tu deducible para emitir la póliza ideal para tu vehículo."}
+                : activeTab === "cotizacion"
+                ? "Compara coberturas y ajusta tu deducible para emitir la póliza ideal para tu vehículo."
+                : "Calcula el valor real actual y proyectado de tu vehículo considerando depreciación de mercado."}
             </p>
           </div>
           <div>
-            <button
-              type="button"
-              className={styles.toggleHistoryBtn}
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              {activeTab === "cliente"
-                ? (showHistory ? "Ver Formulario de Registro" : `Clientes Registrados (${registeredClients.length})`)
-                : activeTab === "vehiculo"
-                ? (showHistory ? "Ver Formulario de Registro" : `Vehículos Registrados (${registeredVehicles.length})`)
-                : (showHistory ? "Ver Cotizador" : `Vehículos Registrados (${registeredVehicles.length})`)}
-            </button>
+            {activeTab !== "avaluo" && (
+              <button
+                type="button"
+                className={styles.toggleHistoryBtn}
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                {activeTab === "cliente"
+                  ? (showHistory ? "Ver Formulario de Registro" : `Clientes Registrados (${registeredClients.length})`)
+                  : activeTab === "vehiculo"
+                  ? (showHistory ? "Ver Formulario de Registro" : `Vehículos Registrados (${registeredVehicles.length})`)
+                  : (showHistory ? "Ver Cotizador" : `Vehículos Registrados (${registeredVehicles.length})`)}
+              </button>
+            )}
           </div>
         </header>
 
@@ -1110,7 +1187,7 @@ export default function Seguros() {
               </div>
             </aside>
           </div>
-        ) : (
+        ) : activeTab === "cotizacion" ? (
           /* PLAN SELECTION & COTIZACION WORKSPACE GRID */
           <div className={styles.workspaceGrid}>
             
@@ -1337,6 +1414,185 @@ export default function Seguros() {
                   </p>
                 </div>
               </div>
+            </aside>
+          </div>
+        ) : (
+          /* CALCULADORA DE AVALUO Y DEPRECIACION */
+          <div className={styles.workspaceGrid}>
+            
+            {/* Avaluo calculator form */}
+            <form onSubmit={handleCalculateAvaluo} className={styles.formCard}>
+              <h2 className={styles.formSectionTitle}>Tasación y Depreciación</h2>
+              
+              <div className={styles.formRow}>
+                <label className={styles.field}>
+                  Valor Original / Precio de Lista (USD)
+                  <input
+                    type="number"
+                    min="1000"
+                    value={avValorOriginal}
+                    onChange={(e) => setAvValorOriginal(e.target.value)}
+                    placeholder="Ej. 500000"
+                    className={styles.input}
+                    required
+                  />
+                </label>
+
+                <label className={styles.field}>
+                  Año de Fabricación
+                  <input
+                    type="number"
+                    min="1990"
+                    max={new Date().getFullYear()}
+                    value={avAnio}
+                    onChange={(e) => setAvAnio(e.target.value)}
+                    placeholder="Ej. 2022"
+                    className={styles.input}
+                    required
+                  />
+                </label>
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.field}>
+                  Kilometraje del Vehículo (KM)
+                  <input
+                    type="number"
+                    min="0"
+                    value={avKilometraje}
+                    onChange={(e) => setAvKilometraje(e.target.value)}
+                    placeholder="Ej. 24000"
+                    className={styles.input}
+                    required
+                  />
+                </label>
+
+                <label className={styles.field}>
+                  Estado Físico y Estético
+                  <select
+                    value={avEstado}
+                    onChange={(e) => setAvEstado(e.target.value as any)}
+                    className={styles.input}
+                    required
+                  >
+                    <option value="Excelente">Excelente (Como nuevo / Recién pintado)</option>
+                    <option value="Bueno">Bueno (Uso normal / Detalles menores)</option>
+                    <option value="Regular">Regular (Golpes menores / Desgaste funcional)</option>
+                    <option value="Desgastado">Desgastado (Daños graves / Carrocería rota)</option>
+                  </select>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className={styles.submitBtn}
+                style={{ marginTop: "16px" }}
+              >
+                Calcular Avalúo Actual
+              </button>
+            </form>
+
+            {/* Results Sidebar & Graph */}
+            <aside className={styles.previewSection}>
+              {avValorCalculado === null ? (
+                <div className={styles.quoteCertificate} style={{ border: "1px dashed rgba(255, 255, 255, 0.1)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "350px" }}>
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--muted)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                  <p style={{ color: "var(--muted)", fontSize: "14px", textAlign: "center", lineHeight: "1.5" }}>
+                    Ingresa los datos del vehículo para calcular su valor comercial actual y obtener una proyección de depreciación a futuro.
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.stickyWrapper}>
+                  <h3 className={styles.previewTitle}>Resultado del Avalúo</h3>
+                  
+                  <div className={styles.quoteCertificate}>
+                    <div className={styles.certHeader}>
+                      <span className={styles.certSubtitle}>Certificado de Tasación Oficial</span>
+                      <h4 className={styles.certTitle}>Legendary Motorsport</h4>
+                    </div>
+
+                    <div className={styles.certBody}>
+                      <div className={styles.costBlock} style={{ background: "rgba(247, 198, 0, 0.05)", border: "1px solid rgba(247, 198, 0, 0.2)" }}>
+                        <span className={styles.costLabelText} style={{ color: "var(--foreground)" }}>Valor Comercial Estimado</span>
+                        <div className={styles.priceContainer}>
+                          <span className={styles.currencySymbol}>$</span>
+                          <span className={styles.priceAmount} style={{ color: "var(--accent)" }}>{avValorCalculado.toLocaleString()}</span>
+                          <span className={styles.billingPeriod} style={{ color: "var(--accent)" }}>USD</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.certGrid} style={{ marginTop: "12px" }}>
+                        <div className={styles.certItem}>
+                          <span className={styles.certLabel}>Año Base</span>
+                          <span className={styles.certValue}>{avAnio}</span>
+                        </div>
+                        <div className={styles.certItem}>
+                          <span className={styles.certLabel}>Estado</span>
+                          <span className={styles.certValue} style={{ color: avEstado === 'Excelente' ? '#52c41a' : avEstado === 'Bueno' ? '#faad14' : '#ff4d4d' }}>{avEstado}</span>
+                        </div>
+                        <div className={styles.certItem} style={{ gridColumn: "span 2" }}>
+                          <span className={styles.certLabel}>Depreciación Estimada</span>
+                          <span className={styles.certValue} style={{ color: "#ff4d4d" }}>
+                            -{Math.round((1 - (avValorCalculado / (parseFloat(avValorOriginal) || 1))) * 100)}% del valor original
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className={styles.divider} />
+
+                      {/* Chart Projection Title */}
+                      <span className={styles.certLabel} style={{ marginBottom: "6px" }}>Proyección de Depreciación (5 años)</span>
+                      
+                      {/* CSS Flexbox-based Bar Chart */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
+                        {avProyeccion.map((val, index) => {
+                          const percent = Math.max(15, Math.round((val / avProyeccion[0]) * 100));
+                          return (
+                            <div key={index} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <span style={{ fontSize: "11px", color: "var(--muted)", width: "36px" }}>
+                                {index === 0 ? "Actual" : `Año +${index}`}
+                              </span>
+                              <div style={{ flex: 1, height: "12px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                <div style={{ 
+                                  height: "100%", 
+                                  width: `${percent}%`, 
+                                  background: `linear-gradient(90deg, var(--accent) 0%, ${index === 0 ? 'var(--accent-2)' : 'rgba(247, 198, 0, 0.4)'} 100%)`, 
+                                  borderRadius: "6px",
+                                  transition: "width 0.5s ease"
+                                }} />
+                              </div>
+                              <span style={{ fontSize: "11px", fontWeight: "bold", color: "#fff", width: "65px", textAlign: "right" }}>
+                                ${val.toLocaleString()}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleApplyAvaluo}
+                        className={styles.submitBtn}
+                        style={{ marginTop: "20px" }}
+                      >
+                        Aplicar Valor al Cotizador
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </aside>
           </div>
         )}
