@@ -258,6 +258,24 @@
   color: var(--night);
 }
 
+.creditButton {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+}
+
+.creditButton:hover {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+
 @keyframes detailOverlayIn {
   from {
     opacity: 0;

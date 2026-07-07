@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import CartDrawer from "./CartDrawer";
 import VehicleDetailModal from "./VehicleDetailModal";
 import VehicleCard from "./VehicleCard";
-import { Cart, CartItem, CatalogVehicle, VehicleDetail } from "./types";
+import CreditApplicationModal from "./CreditApplicationModal";
+import { Cart, CartItem, CatalogVehicle, VehicleDetail, InventoryItem } from "./types";
 import styles from "./Catalog.module.css";
 import Header from "../header/Header";
 
@@ -67,6 +68,8 @@ export default function Catalog() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCreditOpen, setIsCreditOpen] = useState(false);
+  const [selectedCreditInventory, setSelectedCreditInventory] = useState<InventoryItem | null>(null);
   const router = useRouter();
   const updateTimers = useRef<Record<number, ReturnType<typeof setTimeout> | null>>(
     {},
@@ -152,7 +155,10 @@ export default function Catalog() {
     [cartItems],
   );
 
-  const openVehicleDetail = async (vehicle: CatalogVehicle) => {
+  const openVehicleDetail = async (
+    vehicle: CatalogVehicle,
+    options?: { openCredit?: boolean },
+  ) => {
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/catalogo/${vehicle.id}`,
@@ -161,7 +167,14 @@ export default function Catalog() {
       if (!response.ok || !data) {
         throw new Error("No se pudo cargar el detalle");
       }
-      setSelectedVehicle(formatVehicleDetail(data));
+      const formattedVehicle = formatVehicleDetail(data);
+      setSelectedVehicle(formattedVehicle);
+      if (options?.openCredit) {
+        setSelectedCreditInventory(formattedVehicle.inventory[0] ?? null);
+        setIsCreditOpen(true);
+        setIsDetailOpen(false);
+        return;
+      }
       setIsDetailOpen(true);
     } catch (err) {
       setError("No se pudo cargar el detalle del vehiculo");
@@ -170,6 +183,13 @@ export default function Catalog() {
 
   const closeVehicleDetail = () => {
     setIsDetailOpen(false);
+  };
+
+  const handleRecommendCheaperVehicle = () => {
+    if (vehicles.length === 0) return;
+    const cheapestVehicle = [...vehicles].sort((a, b) => a.minPrice - b.minPrice)[0];
+    if (!cheapestVehicle) return;
+    void openVehicleDetail(cheapestVehicle, { openCredit: true });
   };
 
   const handleAddToCart = async (productId: number, quantity: number) => {
@@ -374,6 +394,22 @@ export default function Catalog() {
         onClose={closeVehicleDetail}
         onAddToCart={handleAddToCart}
         onBuyNow={handleBuyNow}
+        onApplyCredit={(selectedInventory) => {
+          setSelectedCreditInventory(selectedInventory);
+          setIsCreditOpen(true);
+          setIsDetailOpen(false);
+        }}
+      />
+
+      <CreditApplicationModal
+        vehicle={selectedVehicle}
+        selectedInventory={selectedCreditInventory}
+        isOpen={isCreditOpen}
+        onClose={() => {
+          setIsCreditOpen(false);
+          setSelectedCreditInventory(null);
+        }}
+        onRecommendCheaperVehicle={handleRecommendCheaperVehicle}
       />
     </div>
   );

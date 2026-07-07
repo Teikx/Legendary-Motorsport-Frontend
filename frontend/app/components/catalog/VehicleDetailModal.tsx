@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useMemo, useState, useEffect, useRef } from "react";
-import { VehicleDetail } from "./types";
+import { VehicleDetail, InventoryItem } from "./types";
 import styles from "./VehicleDetailModal.module.css";
 
 type VehicleDetailModalProps = {
@@ -9,6 +9,7 @@ type VehicleDetailModalProps = {
   onClose: () => void;
   onAddToCart: (productId: number, quantity: number) => void;
   onBuyNow: (productId: number, quantity: number) => void;
+  onApplyCredit: (selectedInventory: InventoryItem | null) => void;
 };
 
 export default function VehicleDetailModal({
@@ -17,6 +18,7 @@ export default function VehicleDetailModal({
   onClose,
   onAddToCart,
   onBuyNow,
+  onApplyCredit,
 }: VehicleDetailModalProps) {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
@@ -216,6 +218,13 @@ export default function VehicleDetailModal({
                 className={styles.secondaryButton}
               >
                 Comprar ahora
+              </button>
+              <button
+                type="button"
+                onClick={() => onApplyCredit(selectedInventory)}
+                className={styles.creditButton}
+              >
+                Solicitar Crédito
               </button>
             </div>
           </div>
